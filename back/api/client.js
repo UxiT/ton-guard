@@ -1,11 +1,8 @@
 const axios = require('axios');
 
 module.exports = class BaseClient {
-  constructor() {
-    const baseURL = process.env.TON_API_BASE_URL
+  constructor(baseURL) {
     const timeout = 5000
-
-    console.log(baseURL);
 
     this.client = axios.create({
       baseURL,

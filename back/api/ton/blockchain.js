@@ -2,7 +2,7 @@ const client = require('../client')
 
 module.exports = class BlockChainApi {
     constructor() {
-        this.client = new client()
+        this.client = new client(process.env.TON_API_BASE_URL)
     }
 
     getAdjacentTransactions(params = {}) {
