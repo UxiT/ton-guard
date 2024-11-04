@@ -17,4 +17,43 @@ module.exports = class BlockChainApi {
     getBlocks(params = {}) {
         return this.client.get('v3/blocks', params)
     }
+
+    getMasterChainBlockShardState(seqno) {
+        return this.client.get('v3/masterchainBlockShardState', {
+            seqno: seqno,
+        })
+    }
+
+    getMasterChainBlockShards(seqno, limit, offset) {
+        return this.client.get('v3/masterchainBlockShards', {
+            seqno: seqno,
+            limit: limit,
+            offset: offset,
+        })
+    }
+
+    getMasterChainInfo() {
+        return this.client.get('v3/masterchainInfo', {})
+    }
+
+    getMessages(params = {}) {
+        return this.client.get('v3/messages', params)
+    }
+
+    getTransactions(params = {}) {
+        return this.client.get('v3/transactions', params)
+    }
+
+    getTransactionsByMasterChainBlock(seqno, limit, offset, sort) {
+        return this.client.get('v3/transactionsByMasterchainBlock', {
+            seqno: seqno,
+            limit: limit,
+            offset: offset,
+            sort: sort
+        })
+    }
+
+    getTransactionsByMessage(params = {}) {
+        return this.client.get('v3/transactionsByMessage', params)
+    }
 }
