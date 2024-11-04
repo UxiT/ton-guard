@@ -1,4 +1,6 @@
+require('dotenv').config()
 const http = require('http');
+const blockchainClient = require('../api/ton/blockchain');
 
 const host = '127.0.0.1';
 const port = 7000;
@@ -9,17 +11,23 @@ function notFound(res) {
     res.end('Not found\n');
 }
 
+const blockchainAPI = new blockchainClient();
+
 const server = http.createServer((req, res) => {
     switch (req.method) {
         case 'GET': {
             switch (req.url) {
-                case '/home': {
+                case '/': {
                     res.statusCode = 200;
                     res.setHeader(
                         'Content-Type',
                         'text/plain'
                     );
-                    res.end('Home page\n');
+
+                    blockchainAPI.getBlocks()
+                        .then(
+                            (blocks) => res.end(JSON.stringify(blocks.data))
+                        );
                     break;
                 }
                 default: {
