@@ -1,48 +1,17 @@
 require('dotenv').config()
-const http = require('http');
+const express = require('express')
 const blockchainClient = require('../api/ton/blockchain');
 
-const host = '127.0.0.1';
-const port = 7000;
-
-function notFound(res) {
-    res.statusCode = 404;
-    res.setHeader('Content-Type', 'text/plain');
-    res.end('Not found\n');
-}
+const app = express()
+const port = 3000
 
 const blockchainAPI = new blockchainClient();
 
-const server = http.createServer((req, res) => {
-    switch (req.method) {
-        case 'GET': {
-            switch (req.url) {
-                case '/': {
-                    res.statusCode = 200;
-                    res.setHeader(
-                        'Content-Type',
-                        'text/plain'
-                    );
+app.get('/', (req, res) => {
+    blockchainAPI.getBlocks()
+        .then(blocks => res.json(blocks.data))
+})
 
-                    blockchainAPI.getBlocks()
-                        .then(
-                            (blocks) => res.end(JSON.stringify(blocks.data))
-                        );
-                    break;
-                }
-                default: {
-                    break;
-                }
-            }
-            break;
-        }
-        default: {
-            notFound(res);
-            break;
-        }
-    }
-});
-
-server.listen(port, host, () => {
-    console.log(`Server listens http://${host}:${port}`);
-});
+app.listen(port, () => {
+    console.log(`running server on localhost:${port}`)
+})
