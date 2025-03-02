@@ -1,17 +1,16 @@
 package service
 
 import (
-	"decard/internal/domain/repository"
-
+	"decard/internal/domain/interfaces"
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 )
 
 type BalanceService struct {
-	accountRepo repository.AccountRepository
+	accountRepo interfaces.AccountRepository
 }
 
-func NewBalanceService(repo repository.AccountRepository) *BalanceService {
+func NewBalanceService(repo interfaces.AccountRepository) *BalanceService {
 	return &BalanceService{
 		accountRepo: repo,
 	}

@@ -1,22 +1,19 @@
 package service
 
 import (
-	"decard/internal/domain/entity"
-	"decard/internal/domain/repository"
-
-	"github.com/google/uuid"
+	"decard/internal/domain/interfaces"
 )
 
 type CardService struct {
-	cardRepository repository.CardRepository
+	cardRepository interfaces.CardRepository
 }
 
-func NewCardService(repo repository.CardRepository) *CardService {
+func NewCardService(repo interfaces.CardRepository) *CardService {
 	return &CardService{
 		cardRepository: repo,
 	}
 }
 
-func (s CardService) GetByCustomerCards(customer uuid.UUID) ([]entity.Card, error) {
-	return s.cardRepository.GetByCustomer(customer)
-}
+//func (s CardService) GetCardsByCustomer(customer uuid.UUID) ([]entity.Card, error) {
+//	return s.cardRepository.GetByCustomer(customer)
+//}

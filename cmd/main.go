@@ -1,15 +1,18 @@
 package main
 
 import (
-	"decard/internal/interfaces/http/handlers"
+	"decard/internal/application/query"
+	ormRepository "decard/internal/infrastructure/orm/repositoty"
+	"decard/internal/infrastructure/provider"
+	"decard/internal/infrastructure/provider/api"
+	"decard/internal/presentation/http/handlers"
 	"log"
 	"net/http"
 
 	"decard/config"
 	"decard/internal/domain/service"
 	"decard/internal/infrastructure/database"
-	orm_repositoty "decard/internal/infrastructure/orm/repositoty"
-	"decard/internal/interfaces/http/routes"
+	"decard/internal/presentation/http/routes"
 )
 
 func main() {
@@ -21,16 +24,37 @@ func main() {
 	defer db.Close()
 
 	// Initialize repositories
-	ProfileRepository := orm_repositoty.NewProfileRepository(db.DB)
+	ProfileRepository := ormRepository.NewProfileRepository(db.DB)
+
+	providerClient := provider.NewClient(*cfg)
+
+	accountAPI := api.NewAccountApi(providerClient)
+	paymentAPI := api.NewPaymentApi(providerClient)
+	transactionAPI := api.NewTransactionApi(providerClient)
 
 	// Initialize services
 	authService := service.NewAuthService(ProfileRepository)
+	accountService := service.NewAccountService(accountAPI)
+	paymentService := service.NewPaymentService(paymentAPI)
+	transactionService := service.NewTransactionService(transactionAPI)
+
+	//CQRS
+	getAccountCardsQuery := query.NewGetAccountCardsHandler(accountService)
+	getCardTransactionsQueryHandler := query.NewGetCardTransactionsQueryHandler(transactionService)
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(*authService)
+	accountHandler := handlers.NewAccountHandler(*accountService, *getAccountCardsQuery)
+	paymentHandler := handlers.NewPaymentHandler(*paymentService)
+	transactionHandler := handlers.NewTransactionHandler(getCardTransactionsQueryHandler)
 
 	// Setup router
-	router := routes.NewRouter(authHandler)
+	router := routes.NewRouter(
+		authHandler,
+		accountHandler,
+		paymentHandler,
+		transactionHandler,
+	)
 
 	// Start server
 	log.Printf("Server starting on %s", cfg.ServerAddress)

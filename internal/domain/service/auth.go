@@ -2,7 +2,7 @@ package service
 
 import (
 	"decard/internal/domain/entity"
-	"decard/internal/domain/repository"
+	"decard/internal/domain/interfaces"
 	"decard/pkg/utils/hasher"
 	"decard/pkg/utils/jwt"
 	"errors"
@@ -14,11 +14,11 @@ var ErrInvalidPassword = errors.New("invalid password")
 
 // AuthService provides authentication logic for customers.
 type AuthService struct {
-	repo repository.ProfileRepository
+	repo interfaces.ProfileRepository
 }
 
 // NewAuthService creates a new instance of AuthService.
-func NewAuthService(repo repository.ProfileRepository) *AuthService {
+func NewAuthService(repo interfaces.ProfileRepository) *AuthService {
 	return &AuthService{
 		repo: repo,
 	}

@@ -7,7 +7,9 @@ import (
 	"strings"
 )
 
-type TelegramIDContextKey string
+type ContextKey string
+
+const UserUUIDKey ContextKey = "user_uuid"
 
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -18,13 +20,13 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		}
 
 		tokenString := strings.Replace(authHeader, "Bearer ", "", 1)
-		telegramID, err := jwt.ValidateToken(tokenString)
+		userUUID, err := jwt.ValidateToken(tokenString)
 		if err != nil {
 			http.Error(w, "Invalid token", http.StatusUnauthorized)
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), TelegramIDContextKey(telegramID), telegramID)
+		ctx := context.WithValue(r.Context(), UserUUIDKey, userUUID)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

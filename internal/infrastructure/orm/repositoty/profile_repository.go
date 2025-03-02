@@ -1,15 +1,19 @@
-package orm_repositoty
+package repositoty
 
 import (
 	"database/sql"
 	"decard/internal/domain/entity"
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
 )
 
+var ErrInvalidUUID = errors.New("invalid uuid")
+
 type ProfileRepository struct {
-	db *sql.DB
+	db    *sql.DB
+	table string
 }
 
 type sqlProfile struct {
@@ -23,7 +27,8 @@ type sqlProfile struct {
 
 func NewProfileRepository(db *sql.DB) *ProfileRepository {
 	return &ProfileRepository{
-		db: db,
+		db:    db,
+		table: "profile",
 	}
 }
 
@@ -44,7 +49,7 @@ func (r *ProfileRepository) FindByTelegramID(telegramID entity.TelegramID) (*ent
 		return nil, err
 	}
 
-	return toDomain(profile)
+	return toDomainProfile(profile)
 }
 
 func (r *ProfileRepository) Create(profile entity.Profile) error {
@@ -60,10 +65,10 @@ func (r *ProfileRepository) Create(profile entity.Profile) error {
 	return err
 }
 
-func toDomain(c sqlProfile) (*entity.Profile, error) {
+func toDomainProfile(c sqlProfile) (*entity.Profile, error) {
 	profileUUID, err := uuid.Parse(c.UUID)
 	if err != nil {
-		return nil, err
+		return nil, errors.Join(ErrInvalidUUID, err)
 	}
 
 	telegramID, err := entity.NewTelegramID(c.TelegramID)

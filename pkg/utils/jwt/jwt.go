@@ -19,19 +19,23 @@ func GenerateToken(userID uuid.UUID) (string, error) {
 	return token.SignedString(jwtSecret)
 }
 
-func ValidateToken(tokenString string) (uint, error) {
+func ValidateToken(tokenString string) (uuid.UUID, error) {
+	var userUUID uuid.UUID
+
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		return jwtSecret, nil
 	})
 
 	if err != nil {
-		return 0, err
+		return userUUID, err
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		userID := uint(claims["user_id"].(float64))
-		return userID, nil
+		userID := claims["user_id"].(string)
+		userUUID, err = uuid.Parse(userID)
+
+		return userUUID, err
 	}
 
-	return 0, jwt.ErrSignatureInvalid
+	return userUUID, jwt.ErrSignatureInvalid
 }

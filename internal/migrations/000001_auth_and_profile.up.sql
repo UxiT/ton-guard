@@ -1,6 +1,6 @@
 create table profile (
                          uuid uuid primary key not null,
-                         telegram_id int not null,
+                         telegram_id int not null unique,
                          email varchar(255) not null,
                          password_hash varchar(255),
 
@@ -18,5 +18,3 @@ create table account (
                          created_at timestamp with time zone not null,
                          updated_at timestamp with time zone not null
 );
-
-alter table profile add constraint telegram_id_unique unique (telegram_id);

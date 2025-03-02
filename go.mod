@@ -16,6 +16,7 @@ require (
 )
 
 require (
+	github.com/moul/http2curl v1.0.0 // indirect
 	go.uber.org/dig v1.18.0 // indirect
 	go.uber.org/fx v1.23.0 // indirect
 	go.uber.org/multierr v1.10.0 // indirect

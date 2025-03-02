@@ -21,18 +21,14 @@ type RegisterRequest struct {
 	Password   string `json:"password"`
 }
 
-// AuthHandler is part of the adapter layer. It only translates HTTP messages
-// into application commands and delegates the business logic to the domain service.
 type AuthHandler struct {
 	authService service.AuthService // Ideally an interface from the domain/application layer.
 }
 
-// NewAuthHandler constructs an AuthHandler with the provided domain service.
 func NewAuthHandler(authService service.AuthService) *AuthHandler {
 	return &AuthHandler{authService: authService}
 }
 
-// Login parses a login command from the HTTP request and delegates to the domain service.
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var req LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {

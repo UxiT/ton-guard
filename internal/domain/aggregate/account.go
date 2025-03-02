@@ -1,6 +1,7 @@
-package entity
+package aggregate
 
 import (
+	"decard/internal/domain/entity"
 	"time"
 
 	"github.com/google/uuid"
@@ -13,6 +14,7 @@ type Account struct {
 	Currency     Currency
 	Status       AccountStatus
 	Balance      Balance
+	Card         entity.Card
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
