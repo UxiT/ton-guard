@@ -4,9 +4,9 @@ import (
 	"context"
 	providerEntity "decard/internal/domain/entity/provider"
 	"decard/internal/domain/interfaces"
+	"decard/internal/domain/valueobject"
 	"decard/internal/infrastructure/provider"
 	"fmt"
-	"github.com/google/uuid"
 	"net/http"
 	"net/url"
 )
@@ -21,7 +21,7 @@ func NewTransactionApi(client *provider.Client) interfaces.TransactionService {
 	}
 }
 
-func (a *transactionApi) GetCardTransactions(card uuid.UUID) (*[]providerEntity.Transaction, error) {
+func (a *transactionApi) GetCardTransactions(card valueobject.UUID) (*[]providerEntity.Transaction, error) {
 	var result struct {
 		Transactions []providerEntity.Transaction `json:"transactions"`
 	}

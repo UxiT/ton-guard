@@ -2,7 +2,6 @@ package database
 
 import (
 	"database/sql"
-	"decard/config"
 	"errors"
 	"fmt"
 
@@ -20,8 +19,9 @@ func (db *Database) Close() {
 	}
 }
 
-func NewDatabase(cfg *config.Config) *Database {
-	db, err := sql.Open("postgres", cfg.DB_URL)
+func NewDatabase(dbURL string) *Database {
+	db, err := sql.Open("postgres", dbURL)
+
 	if err != nil {
 		panic("Failed to connect to database: " + err.Error())
 	}

@@ -11,14 +11,22 @@ import (
 )
 
 type Config struct {
+	Env string
+
 	ServerAddress string
-	DB_URL        string
+	DbUrl         string
 	JWTSecret     string
 
 	ProviderApiKey     string
 	ProviderBaseApiURL *url.URL
 
-	ProviderPrivateKey any
+	PrivateKey any
+}
+
+var Cfg *Config
+
+func init() {
+	Cfg = NewConfig()
 }
 
 func NewConfig() *Config {
@@ -45,14 +53,16 @@ func NewConfig() *Config {
 	}
 
 	return &Config{
+		Env: getEnv("APP_ENV"),
+
 		ServerAddress: getEnv("SERVER_ADDRESS"),
-		DB_URL:        getEnv("DB_URL"),
+		DbUrl:         getEnv("DB_URL"),
 		JWTSecret:     getEnv("SECRET_KEY"),
 
 		ProviderApiKey:     getEnv("PROVIDER_API_KEY"),
 		ProviderBaseApiURL: providerBaseUrl,
 
-		ProviderPrivateKey: privateKey,
+		PrivateKey: privateKey,
 	}
 }
 

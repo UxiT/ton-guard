@@ -1,64 +1,34 @@
 package main
 
 import (
-	"decard/internal/application/query"
-	ormRepository "decard/internal/infrastructure/orm/repositoty"
-	"decard/internal/infrastructure/provider"
-	"decard/internal/infrastructure/provider/api"
-	"decard/internal/presentation/http/handlers"
-	"log"
-	"net/http"
-
 	"decard/config"
-	"decard/internal/domain/service"
-	"decard/internal/infrastructure/database"
-	"decard/internal/presentation/http/routes"
+	"decard/config/container"
+	"decard/internal/infrastructure/bootstrap"
+	"log/slog"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 func main() {
-	// Load configuration
-	cfg := config.NewConfig()
+	cfg := config.Cfg
 
-	// Initialize database
-	db := database.NewDatabase(cfg)
-	defer db.Close()
+	registry := container.NewContainer(cfg)
 
-	// Initialize repositories
-	ProfileRepository := ormRepository.NewProfileRepository(db.DB)
+	defer registry.DB.Close()
 
-	providerClient := provider.NewClient(*cfg)
+	application := bootstrap.New(registry, cfg.ServerAddress)
 
-	accountAPI := api.NewAccountApi(providerClient)
-	paymentAPI := api.NewPaymentApi(providerClient)
-	transactionAPI := api.NewTransactionApi(providerClient)
+	go application.HTTPSrv.MusRun()
 
-	// Initialize services
-	authService := service.NewAuthService(ProfileRepository)
-	accountService := service.NewAccountService(accountAPI)
-	paymentService := service.NewPaymentService(paymentAPI)
-	transactionService := service.NewTransactionService(transactionAPI)
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)
 
-	//CQRS
-	getAccountCardsQuery := query.NewGetAccountCardsHandler(accountService)
-	getCardTransactionsQueryHandler := query.NewGetCardTransactionsQueryHandler(transactionService)
+	systemCall := <-stop
 
-	// Initialize handlers
-	authHandler := handlers.NewAuthHandler(*authService)
-	accountHandler := handlers.NewAccountHandler(*accountService, *getAccountCardsQuery)
-	paymentHandler := handlers.NewPaymentHandler(*paymentService)
-	transactionHandler := handlers.NewTransactionHandler(getCardTransactionsQueryHandler)
+	registry.Logger.Info("stopping application", slog.String("signal", systemCall.String()))
 
-	// Setup router
-	router := routes.NewRouter(
-		authHandler,
-		accountHandler,
-		paymentHandler,
-		transactionHandler,
-	)
+	application.HTTPSrv.Stop()
 
-	// Start server
-	log.Printf("Server starting on %s", cfg.ServerAddress)
-	if err := http.ListenAndServe(cfg.ServerAddress, router); err != nil {
-		log.Fatalf("Server failed to start: %v", err)
-	}
+	registry.Logger.Info("application stopped")
 }

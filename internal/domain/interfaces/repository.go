@@ -1,25 +1,26 @@
 package interfaces
 
 import (
-	"decard/internal/domain/aggregate"
 	"decard/internal/domain/entity"
-	"github.com/google/uuid"
+	"decard/internal/domain/valueobject"
 )
 
 type ProfileRepository interface {
+	FindByUUID(userUUID valueobject.UUID) (*entity.Profile, error)
 	FindByTelegramID(telegramID entity.TelegramID) (*entity.Profile, error)
 	Create(profile entity.Profile) error
 }
 
 type CustomerRepository interface {
-	FindByTelegramID(telegramID entity.TelegramID) (*aggregate.Customer, error)
-	Create(customer aggregate.Customer) error
+	FindByProfileUUID(profileUUID valueobject.UUID) (*entity.Customer, error)
+	FindByTelegramID(telegramID entity.TelegramID) (*entity.Customer, error)
+	Create(customer entity.Customer) error
 }
 
 type CardRepository interface {
-	GetByAccount(account uuid.UUID) (entity.Card, error)
+	GetByAccount(account valueobject.UUID) (entity.Card, error)
 }
 
 type AccountRepository interface {
-	GetByCustomer(customer uuid.UUID) (aggregate.Account, error)
+	GetByCustomer(customer valueobject.UUID) (*entity.Account, error)
 }

@@ -4,9 +4,9 @@ import (
 	"context"
 	providerEntity "decard/internal/domain/entity/provider"
 	"decard/internal/domain/interfaces"
+	"decard/internal/domain/valueobject"
 	"decard/internal/infrastructure/provider"
 	"fmt"
-	"github.com/google/uuid"
 	"net/http"
 	"net/url"
 )
@@ -21,7 +21,28 @@ func NewAccountApi(client *provider.Client) interfaces.AccountService {
 	}
 }
 
-func (a *accountAPI) GetAccountCards(account uuid.UUID) ([]providerEntity.Card, error) {
+func (a *accountAPI) GetAccount(account valueobject.UUID) (*providerEntity.Account, error) {
+	var result struct {
+		Account providerEntity.Account `json:"account"`
+	}
+
+	endpoint := a.client.BaseURL.JoinPath(fmt.Sprintf("/accounts/%s", account.String()))
+
+	request, err := http.NewRequestWithContext(context.TODO(), http.MethodGet, endpoint.String(), nil)
+	if err != nil {
+		return nil, fmt.Errorf("error creating request: %w", err)
+	}
+
+	err = a.client.SendRequest(request, &result)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &result.Account, nil
+}
+
+func (a *accountAPI) GetAccountCards(account valueobject.UUID) ([]providerEntity.Card, error) {
 	var result struct {
 		Cards []providerEntity.Card `json:"cards"`
 	}

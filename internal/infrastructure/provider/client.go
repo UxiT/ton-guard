@@ -53,7 +53,7 @@ func NewClient(cfg config.Config) *Client {
 		Transport: &authTransport{
 			RoundTripper: http.DefaultTransport,
 			ApiKey:       cfg.ProviderApiKey,
-			PrivateKey:   cfg.ProviderPrivateKey,
+			PrivateKey:   cfg.PrivateKey,
 		},
 	}
 
@@ -61,7 +61,7 @@ func NewClient(cfg config.Config) *Client {
 		HttpClient: httpClient,
 		BaseURL:    cfg.ProviderBaseApiURL,
 		ApiKey:     cfg.ProviderApiKey,
-		PrivateKey: cfg.ProviderPrivateKey,
+		PrivateKey: cfg.PrivateKey,
 	}
 }
 

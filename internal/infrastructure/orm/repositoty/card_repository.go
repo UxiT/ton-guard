@@ -3,9 +3,8 @@ package repositoty
 import (
 	"database/sql"
 	"decard/internal/domain/entity"
-	"errors"
+	"decard/internal/domain/valueobject"
 	"fmt"
-	"github.com/google/uuid"
 	"time"
 )
 
@@ -29,7 +28,7 @@ func NewCardRepository(db *sql.DB) *CardRepository {
 	}
 }
 
-func (r *CardRepository) GetByAccount(account uuid.UUID) (*entity.Card, error) {
+func (r *CardRepository) GetByAccount(account valueobject.UUID) (*entity.Card, error) {
 	var card sqlCard
 	row := r.db.QueryRow(
 		fmt.Sprintf(`SELECT * FROM %s WHERE account_uuid = $1`, r.table),
@@ -52,19 +51,19 @@ func (r *CardRepository) GetByAccount(account uuid.UUID) (*entity.Card, error) {
 }
 
 func toDomainCard(c sqlCard) (*entity.Card, error) {
-	cardUUID, err := uuid.Parse(c.UUID)
+	cardUUID, err := valueobject.ParseUUID(c.UUID)
 	if err != nil {
-		return nil, errors.Join(ErrInvalidUUID, err)
+		return nil, err
 	}
 
-	externalUUID, err := uuid.Parse(c.ExternalUUID)
+	externalUUID, err := valueobject.ParseUUID(c.ExternalUUID)
 	if err != nil {
-		return nil, errors.Join(ErrInvalidUUID, err)
+		return nil, err
 	}
 
-	accountUUID, err := uuid.Parse(c.AccountUUID)
+	accountUUID, err := valueobject.ParseUUID(c.AccountUUID)
 	if err != nil {
-		return nil, errors.Join(ErrInvalidUUID, err)
+		return nil, err
 	}
 
 	return &entity.Card{

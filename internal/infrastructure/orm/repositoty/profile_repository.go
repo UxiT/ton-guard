@@ -3,13 +3,9 @@ package repositoty
 import (
 	"database/sql"
 	"decard/internal/domain/entity"
-	"errors"
+	"decard/internal/domain/valueobject"
 	"time"
-
-	"github.com/google/uuid"
 )
-
-var ErrInvalidUUID = errors.New("invalid uuid")
 
 type ProfileRepository struct {
 	db    *sql.DB
@@ -32,10 +28,30 @@ func NewProfileRepository(db *sql.DB) *ProfileRepository {
 	}
 }
 
+func (r *ProfileRepository) FindByUUID(profileUUID valueobject.UUID) (*entity.Profile, error) {
+	var profile sqlProfile
+
+	row := r.db.QueryRow("SELECT * FROM profile WHERE uuid = $1", profileUUID.String())
+	err := row.Scan(
+		&profile.UUID,
+		&profile.TelegramID,
+		&profile.Email,
+		&profile.PasswordHash,
+		&profile.CreatedAt,
+		&profile.UpdatedAt,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return toDomainProfile(profile)
+}
+
 func (r *ProfileRepository) FindByTelegramID(telegramID entity.TelegramID) (*entity.Profile, error) {
 	var profile sqlProfile
 
-	row := r.db.QueryRow("SELECT * FROM profile WHERE telegram_id = $1", telegramID)
+	row := r.db.QueryRow("SELECT * FROM profile WHERE telegram_id = $1", telegramID.Int())
 	err := row.Scan(
 		&profile.UUID,
 		&profile.TelegramID,
@@ -62,13 +78,14 @@ func (r *ProfileRepository) Create(profile entity.Profile) error {
 		time.Now(),
 		time.Now(),
 	)
+
 	return err
 }
 
 func toDomainProfile(c sqlProfile) (*entity.Profile, error) {
-	profileUUID, err := uuid.Parse(c.UUID)
+	profileUUID, err := valueobject.ParseUUID(c.UUID)
 	if err != nil {
-		return nil, errors.Join(ErrInvalidUUID, err)
+		return nil, err
 	}
 
 	telegramID, err := entity.NewTelegramID(c.TelegramID)

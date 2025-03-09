@@ -1,41 +1,51 @@
 package jwt
 
 import (
-	"time"
-
+	"decard/config"
+	"decard/internal/domain"
+	"decard/internal/domain/valueobject"
+	"fmt"
 	"github.com/golang-jwt/jwt"
-	"github.com/google/uuid"
+	"log"
+	"time"
 )
 
-var jwtSecret = []byte("your-secret-key") // Should be loaded from config
+type Claims struct {
+	ProfileUUID valueobject.UUID `json:"profile_uuid"`
+	jwt.StandardClaims
+}
 
-func GenerateToken(userID uuid.UUID) (string, error) {
-	claims := jwt.MapClaims{
-		"user_id": userID.String(),
-		"exp":     time.Now().Add(time.Hour * 24).Unix(),
+func GenerateToken(profileUUID valueobject.UUID) (string, error) {
+	claims := &Claims{
+		ProfileUUID: profileUUID,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(time.Hour * 2).Unix(),
+		},
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(jwtSecret)
+
+	return token.SignedString([]byte(config.Cfg.JWTSecret))
 }
 
-func ValidateToken(tokenString string) (uuid.UUID, error) {
-	var userUUID uuid.UUID
+func ValidateToken(tokenString string) (valueobject.UUID, error) {
+	claims := &Claims{}
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
 
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		return jwtSecret, nil
+		return []byte(config.Cfg.JWTSecret), nil
 	})
 
 	if err != nil {
-		return userUUID, err
+		log.Printf("error: %s", err.Error())
+		return valueobject.UUID{}, domain.ErrInvalidJWT
 	}
 
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		userID := claims["user_id"].(string)
-		userUUID, err = uuid.Parse(userID)
-
-		return userUUID, err
+	if !token.Valid {
+		return valueobject.UUID{}, domain.ErrInvalidJWT
 	}
 
-	return userUUID, jwt.ErrSignatureInvalid
+	return claims.ProfileUUID, nil
 }

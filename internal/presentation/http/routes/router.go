@@ -1,53 +1,38 @@
 package routes
 
 import (
-	http2 "decard/internal/presentation/http"
+	"decard/internal/presentation/http/common"
 	"decard/internal/presentation/http/handlers"
 	"decard/internal/presentation/http/middleware"
-	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/gorilla/mux"
 )
 
-type APIError struct {
-	StatusCode int `json:"status_code"`
-	Msg        any `json:"msg"`
-}
-
-func (e APIError) Error() string {
-	return fmt.Sprintf("api error: %d", e.StatusCode)
-}
-
-func NewApiError(statusCode int, err error) APIError {
-	return APIError{
-		StatusCode: statusCode,
-		Msg:        err.Error(),
-	}
-}
-
 type APIFunc func(w http.ResponseWriter, r *http.Request) error
 
-func Make(h APIFunc) http.HandlerFunc {
+func Make(l *slog.Logger, h APIFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := h(w, r); err != nil {
-			if apiErr, ok := err.(APIError); ok {
-				http2.WriteError(w, apiErr.Error(), apiErr.StatusCode)
-			} else {
-				errResp := map[string]any{
-					"status_code": http.StatusInternalServerError,
-					"msg":         "internal server error",
-				}
+			e := common.JSONErrorResponse(w, err)
 
-				log.Printf("error: %s", err.Error())
-				http2.WriteError(w, errResp, http.StatusInternalServerError)
+			if e != nil {
+				http.Error(w, "internal server error", http.StatusInternalServerError)
 			}
+
+			l.Error(
+				"http error",
+				slog.String("method", r.Method),
+				slog.String("url", r.URL.String()),
+				slog.String("error", err.Error()),
+			)
 		}
 	}
 }
 
 func NewRouter(
+	logger *slog.Logger,
 	authHandler *handlers.AuthHandler,
 	accountHandler *handlers.AccountHandler,
 	paymentHandler *handlers.PaymentHandler,
@@ -55,19 +40,23 @@ func NewRouter(
 ) *mux.Router {
 	r := mux.NewRouter()
 
+	publicV1 := r.PathPrefix("/api/v1").Subrouter()
+
 	// Public routes
-	r.HandleFunc("/api/v1/auth/login", authHandler.Login).Methods("POST")
-	r.HandleFunc("/api/v1/auth/register", authHandler.Register).Methods("POST")
+	publicV1.HandleFunc("/auth/login", Make(logger, authHandler.Login)).Methods("POST")
+	publicV1.HandleFunc("/auth/register", Make(logger, authHandler.Register)).Methods("POST")
 
-	r.HandleFunc("/api/v1/accounts", accountHandler.GetList).Methods("GET")
-	r.HandleFunc("/api/v1/account/{account}/cards", Make(accountHandler.GetAccountCards)).Methods("GET")
+	protectedV1 := r.PathPrefix("/api/v1").Subrouter()
+	protectedV1.Use(middleware.AuthMiddleware)
 
-	r.HandleFunc("/api/v1/transfer", paymentHandler.Transfer).Methods("POST")
+	protectedV1.HandleFunc("/account", Make(logger, accountHandler.GetCustomerAccount)).Methods("GET")
+	protectedV1.HandleFunc("/accounts", Make(logger, accountHandler.GetList)).Methods("GET")
+	protectedV1.HandleFunc("/account/{account}/cards", Make(logger, accountHandler.GetAccountCards)).Methods("GET")
 
-	r.HandleFunc("/api/v1/transactions/{card}", Make(transactionHandler.GetTransactionsByCard)).Methods("GET")
+	protectedV1.HandleFunc("/transfer", Make(logger, paymentHandler.Transfer)).Methods("POST")
+
+	protectedV1.HandleFunc("/transactions/{card}", Make(logger, transactionHandler.GetTransactionsByCard)).Methods("GET")
 	// Protected routes
-	protected := r.PathPrefix("/api").Subrouter()
-	protected.Use(middleware.AuthMiddleware)
 
 	//Card
 	//protected.HandleFunc("/api/v1/cards", cardHandler.GetCardList).Methods("GET")

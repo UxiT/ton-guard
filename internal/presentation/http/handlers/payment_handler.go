@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"decard/internal/domain/service"
-	presentation "decard/internal/presentation/http"
+	"decard/internal/presentation/http/common"
 	"encoding/json"
 	"net/http"
 )
@@ -17,7 +17,7 @@ func NewPaymentHandler(paymentService service.PaymentService) *PaymentHandler {
 	}
 }
 
-func (h *PaymentHandler) Transfer(w http.ResponseWriter, r *http.Request) {
+func (h *PaymentHandler) Transfer(w http.ResponseWriter, r *http.Request) error {
 	var request struct {
 		Amount      float64 `json:"amount"`
 		Description string  `json:"description"`
@@ -26,16 +26,14 @@ func (h *PaymentHandler) Transfer(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		presentation.WriteError(w, "Invalid request body", http.StatusBadRequest)
-		return
+		return err
 	}
 
 	err := h.paymentService.Transfer(request.Amount, request.Description, request.From, request.To)
 
 	if err != nil {
-		presentation.WriteError(w, err.Error(), http.StatusBadRequest)
-		return
+		return err
 	}
 
-	presentation.WriteJSONResponse(w, nil)
+	return common.JSONResponse(w, http.StatusOK, nil)
 }

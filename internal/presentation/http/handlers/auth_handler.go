@@ -1,15 +1,12 @@
 package handlers
 
 import (
-	"decard/internal/domain/entity"
-	"decard/internal/domain/service"
+	"decard/internal/application/command/auth"
+	"decard/internal/presentation/http/common"
 	"encoding/json"
-	"errors"
 	"net/http"
 )
 
-// LoginRequest and RegisterRequest are presentation-layer DTOs,
-// providing a contract for parsing incoming JSON.
 type LoginRequest struct {
 	TelegramID int    `json:"telegram_id"`
 	Password   string `json:"password"`
@@ -22,84 +19,54 @@ type RegisterRequest struct {
 }
 
 type AuthHandler struct {
-	authService service.AuthService // Ideally an interface from the domain/application layer.
+	authCommandHandler     *auth.AuthenticateCommandHandler
+	registerCommandHandler *auth.RegisterCommandHandler
 }
 
-func NewAuthHandler(authService service.AuthService) *AuthHandler {
-	return &AuthHandler{authService: authService}
+func NewAuthHandler(
+	authCommandHandler *auth.AuthenticateCommandHandler,
+	registerCommandHandler *auth.RegisterCommandHandler,
+) *AuthHandler {
+	return &AuthHandler{
+		authCommandHandler:     authCommandHandler,
+		registerCommandHandler: registerCommandHandler,
+	}
 }
 
-func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) error {
 	var req LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		jsonError(w, "Invalid request", http.StatusBadRequest)
-
-		return
+		return err
 	}
 
-	telegramID, err := entity.NewTelegramID(req.TelegramID)
+	token, err := h.authCommandHandler.Handle(auth.AuthenticateCommand{
+		TelegramID: req.TelegramID,
+		Password:   req.Password,
+	})
+
 	if err != nil {
-		jsonError(w, err.Error(), http.StatusUnprocessableEntity)
-
-		return
+		return err
 	}
 
-	token, err := h.authService.Authenticate(telegramID, req.Password)
-	if err != nil {
-		if errors.Is(err, entity.ErrInvalidCredentials) {
-			jsonError(w, err.Error(), http.StatusUnauthorized)
-		} else {
-			jsonError(w, err.Error(), http.StatusInternalServerError)
-		}
-		return
-	}
-
-	jsonResponse(w, map[string]string{"token": token}, http.StatusOK)
+	return common.JSONResponse(w, http.StatusOK, map[string]string{"token": token})
 }
 
-func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) error {
 	var req RegisterRequest
+
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		jsonError(w, "Invalid request", http.StatusBadRequest)
-
-		return
+		return err
 	}
 
-	telegramID, err := entity.NewTelegramID(req.TelegramID)
+	token, err := h.registerCommandHandler.Handle(auth.RegisterCommand{
+		TelegramID: req.TelegramID,
+		Email:      req.Email,
+		Password:   req.Password,
+	})
+
 	if err != nil {
-		jsonError(w, err.Error(), http.StatusUnprocessableEntity)
-
-		return
+		return err
 	}
 
-	email, err := entity.NewEmail(req.Email)
-	if err != nil {
-		jsonError(w, err.Error(), http.StatusUnprocessableEntity)
-
-		return
-	}
-
-	token, err := h.authService.Register(telegramID, email, req.Password)
-	if err != nil {
-		jsonError(w, err.Error(), http.StatusInternalServerError)
-
-		return
-	}
-
-	jsonResponse(w, map[string]string{"token": token}, http.StatusOK)
-}
-
-// jsonResponse is a helper to send JSON responses with a given status.
-func jsonResponse(w http.ResponseWriter, data interface{}, statusCode int) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(statusCode)
-	// Ignoring encoding errors for simplicity.
-	json.NewEncoder(w).Encode(data)
-}
-
-// jsonError sends an error message as JSON with the supplied HTTP status code.
-func jsonError(w http.ResponseWriter, message string, statusCode int) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(statusCode)
-	json.NewEncoder(w).Encode(map[string]string{"error": message})
+	return common.JSONResponse(w, http.StatusOK, map[string]string{"token": token})
 }

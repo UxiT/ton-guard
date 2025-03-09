@@ -1,19 +1,11 @@
 package entity
 
 import (
-	"errors"
-
-	"github.com/google/uuid"
-)
-
-var (
-	ErrInvalidUUID        = errors.New("invalid UUID provided")
-	ErrInvalidPassword    = errors.New("invalid password")
-	ErrInvalidCredentials = errors.New("invalid Credentials")
+	"decard/internal/domain/valueobject"
 )
 
 type Profile struct {
-	UUID         uuid.UUID
+	UUID         valueobject.UUID
 	TelegramID   TelegramID
 	Email        Email
 	PasswordHash string
@@ -21,7 +13,7 @@ type Profile struct {
 
 func NewProfile(telegramID TelegramID, email Email, password string) Profile {
 	return Profile{
-		UUID:         uuid.New(),
+		UUID:         valueobject.NewUUID(),
 		TelegramID:   telegramID,
 		Email:        email,
 		PasswordHash: password,

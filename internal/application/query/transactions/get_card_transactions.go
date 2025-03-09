@@ -1,9 +1,9 @@
-package query
+package transactions
 
 import (
 	providerEntity "decard/internal/domain/entity/provider"
 	"decard/internal/domain/service"
-	"github.com/google/uuid"
+	"decard/internal/domain/valueobject"
 )
 
 type GetCardTransactionsQuery struct {
@@ -21,7 +21,7 @@ func NewGetCardTransactionsQueryHandler(transactionService *service.TransactionS
 }
 
 func (h *GetCardTransactionsQueryHandler) Handle(q GetCardTransactionsQuery) (*[]providerEntity.Transaction, error) {
-	cardUUID, err := uuid.Parse(q.CardUUID)
+	cardUUID, err := valueobject.ParseUUID(q.CardUUID)
 
 	if err != nil {
 		return nil, err

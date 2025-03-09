@@ -1,9 +1,9 @@
-package query
+package accounts
 
 import (
 	providerEntity "decard/internal/domain/entity/provider"
-	"decard/internal/domain/service"
-	"github.com/google/uuid"
+	"decard/internal/domain/interfaces"
+	"decard/internal/domain/valueobject"
 )
 
 type GetAccountCards struct {
@@ -11,17 +11,17 @@ type GetAccountCards struct {
 }
 
 type GetAccountCardsHandler struct {
-	accountService *service.AccountService
+	accountService interfaces.AccountService
 }
 
-func NewGetAccountCardsHandler(accountService *service.AccountService) *GetAccountCardsHandler {
-	return &GetAccountCardsHandler{
+func NewGetAccountCardsHandler(accountService interfaces.AccountService) GetAccountCardsHandler {
+	return GetAccountCardsHandler{
 		accountService: accountService,
 	}
 }
 
 func (h *GetAccountCardsHandler) Handle(q GetAccountCards) ([]providerEntity.Card, error) {
-	accountUUID, err := uuid.Parse(q.AccountUUID)
+	accountUUID, err := valueobject.ParseUUID(q.AccountUUID)
 	if err != nil {
 		return nil, err
 	}

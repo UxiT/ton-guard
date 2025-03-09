@@ -1,4 +1,4 @@
-package command
+package transfer
 
 type MakeAccountTransferCommand struct {
 	Amount      float64

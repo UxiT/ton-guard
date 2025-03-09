@@ -1,19 +1,33 @@
 package handlers
 
 import (
-	"decard/internal/domain/service"
+	"decard/internal/domain"
+	"decard/internal/domain/valueobject"
+	"decard/internal/presentation/http/middleware"
+	"log/slog"
+	"net/http"
 )
 
 type CardHandler struct {
-	accountService service.CardService
+	logger *slog.Logger
 }
 
-func NewCardHandler() *CardHandler {
-	return &CardHandler{}
+func NewCardHandler(logger *slog.Logger) *CardHandler {
+	return &CardHandler{
+		logger: logger,
+	}
 }
 
-//func (h *CardHandler) GetCardList(w http.ResponseWriter, r *http.Request) {
-//	userUUID := r.Context().Value(middleware.UserUUIDKey).(uuid.UUID)
-//
-//	cards, err := h.cardService.GetCardsByCustomer(userUUID)
-//}
+func (h *CardHandler) GetCustomerCards(w http.ResponseWriter, r *http.Request) error {
+	const op = "http.handler.GetCustomerCards"
+
+	logger := h.logger.With(slog.String("operation", op))
+	_, ok := r.Context().Value(middleware.ProfileUUIDKey).(valueobject.UUID)
+
+	if !ok {
+		logger.Error("failed to assert user UUID")
+		return domain.ErrInvalidUser
+	}
+
+	return nil
+}

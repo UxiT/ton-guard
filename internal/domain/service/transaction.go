@@ -3,7 +3,7 @@ package service
 import (
 	providerEntity "decard/internal/domain/entity/provider"
 	"decard/internal/domain/interfaces"
-	"github.com/google/uuid"
+	"decard/internal/domain/valueobject"
 )
 
 type TransactionService struct {
@@ -16,7 +16,7 @@ func NewTransactionService(providerTransactionService interfaces.TransactionServ
 	}
 }
 
-func (s *TransactionService) GetTransactionsByCard(card uuid.UUID) (*[]providerEntity.Transaction, error) {
+func (s *TransactionService) GetTransactionsByCard(card valueobject.UUID) (*[]providerEntity.Transaction, error) {
 	//validate user has access to this card
 
 	return s.providerTransactionService.GetCardTransactions(card)

@@ -2,20 +2,21 @@ package interfaces
 
 import (
 	providerEntity "decard/internal/domain/entity/provider"
-	"github.com/google/uuid"
+	"decard/internal/domain/valueobject"
 )
 
 type CardService interface {
-	GetCustomerCards(account uuid.UUID) (*[]providerEntity.Card, error)
+	GetCustomerCards(account valueobject.UUID) (*[]providerEntity.Card, error)
 }
 
 type AccountService interface {
 	GetAccountsList() ([]providerEntity.Account, error)
-	GetAccountCards(account uuid.UUID) ([]providerEntity.Card, error)
+	GetAccount(account valueobject.UUID) (*providerEntity.Account, error)
+	GetAccountCards(account valueobject.UUID) ([]providerEntity.Card, error)
 }
 
 type TransactionService interface {
-	GetCardTransactions(card uuid.UUID) (*[]providerEntity.Transaction, error)
+	GetCardTransactions(card valueobject.UUID) (*[]providerEntity.Transaction, error)
 }
 
 type PaymentService interface {
