@@ -3,6 +3,6 @@ create table card (
     external_uuid uuid not null unique,
     account_uuid uuid references account(uuid),
 
-    created_at timestamp with time zone not null,
-    updated_at timestamp with time zone not null
+    created_at timestamp not null,
+    updated_at timestamp not null
 )

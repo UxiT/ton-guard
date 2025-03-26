@@ -24,3 +24,10 @@ type CardRepository interface {
 type AccountRepository interface {
 	GetByCustomer(customer valueobject.UUID) (*entity.Account, error)
 }
+
+type RefreshTokenRepository interface {
+	FindByToken(token string) (*entity.RefreshToken, error)
+	GetLastForProfile(profileUUID valueobject.UUID) (*entity.RefreshToken, error)
+	Delete(token valueobject.RefreshToken) error
+	Create(profileUUID valueobject.UUID) error
+}

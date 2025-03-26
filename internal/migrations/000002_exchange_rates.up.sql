@@ -5,5 +5,5 @@ create table exchange_rates (
                                 related_iso_code varchar(32) not null,
                                 meta jsonb,
 
-                                created_at timestamp with time zone not null
+                                created_at timestamp not null
 );

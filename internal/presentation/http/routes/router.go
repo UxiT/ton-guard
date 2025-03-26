@@ -37,6 +37,7 @@ func NewRouter(
 	accountHandler *handlers.AccountHandler,
 	paymentHandler *handlers.PaymentHandler,
 	transactionHandler *handlers.TransactionHandler,
+	cardHandler *handlers.CardHandler,
 ) *mux.Router {
 	r := mux.NewRouter()
 
@@ -44,11 +45,13 @@ func NewRouter(
 
 	// Public routes
 	publicV1.HandleFunc("/auth/login", Make(logger, authHandler.Login)).Methods("POST")
+	publicV1.HandleFunc("/auth/refresh", Make(logger, authHandler.Refresh)).Methods("POST")
 	publicV1.HandleFunc("/auth/register", Make(logger, authHandler.Register)).Methods("POST")
 
 	protectedV1 := r.PathPrefix("/api/v1").Subrouter()
 	protectedV1.Use(middleware.AuthMiddleware)
 
+	// Protected routes
 	protectedV1.HandleFunc("/account", Make(logger, accountHandler.GetCustomerAccount)).Methods("GET")
 	protectedV1.HandleFunc("/accounts", Make(logger, accountHandler.GetList)).Methods("GET")
 	protectedV1.HandleFunc("/account/{account}/cards", Make(logger, accountHandler.GetAccountCards)).Methods("GET")
@@ -56,10 +59,13 @@ func NewRouter(
 	protectedV1.HandleFunc("/transfer", Make(logger, paymentHandler.Transfer)).Methods("POST")
 
 	protectedV1.HandleFunc("/transactions/{card}", Make(logger, transactionHandler.GetTransactionsByCard)).Methods("GET")
-	// Protected routes
 
 	//Card
-	//protected.HandleFunc("/api/v1/cards", cardHandler.GetCardList).Methods("GET")
+	protectedV1.HandleFunc("/api/v1/cards", Make(logger, cardHandler.GetCustomerCards)).Methods("GET")
+	protectedV1.HandleFunc("/api/v1/cards", Make(logger, cardHandler.Issue)).Methods("POST")
+	protectedV1.HandleFunc("/api/v1/cards/{card}", Make(logger, cardHandler.Info)).Methods("GET")
+	protectedV1.HandleFunc("/api/v1/cards/{card}/freeze", Make(logger, cardHandler.Freeze)).Methods("POST")
+	protectedV1.HandleFunc("/api/v1/cards/{card}/block", Make(logger, cardHandler.Block)).Methods("POST")
 
 	//Account
 	//protected.HandleFunc("/api/v1/account", accountHandler.GetByCustomer).Methods("GET")

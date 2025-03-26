@@ -18,6 +18,10 @@ type RegisterRequest struct {
 	Password   string `json:"password"`
 }
 
+type RefreshRequest struct {
+	RefreshToken string `json:"refresh_token"`
+}
+
 type AuthHandler struct {
 	authCommandHandler     *auth.AuthenticateCommandHandler
 	registerCommandHandler *auth.RegisterCommandHandler
@@ -69,4 +73,12 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	return common.JSONResponse(w, http.StatusOK, map[string]string{"token": token})
+}
+
+func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) error {
+	var req RefreshRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return err
+	}
 }

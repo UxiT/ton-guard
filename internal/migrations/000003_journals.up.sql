@@ -7,7 +7,7 @@ create table batch (
                        description varchar,
                        meta jsonb,
 
-                       created_at timestamp with time zone not null
+                       created_at timestamp not null
 );
 
 create table batch_final (
@@ -17,8 +17,8 @@ create table batch_final (
                              description varchar,
                              meta jsonb,
 
-                             created_at timestamp with time zone not null,
-                             updated_at timestamp with time zone not null
+                             created_at timestamp not null,
+                             updated_at timestamp not null
 );
 
 create table journal_entry (
@@ -30,5 +30,5 @@ create table journal_entry (
                                account_id uuid references account(uuid),
                                batch_id uuid references batch(uuid),
 
-                               created_at timestamp with time zone not null
+                               created_at timestamp not null
 );

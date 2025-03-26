@@ -4,16 +4,16 @@ create table profile (
                          email varchar(255) not null,
                          password_hash varchar(255),
 
-                         created_at timestamp with time zone not null,
-                         updated_at timestamp with time zone not null
+                         created_at timestamp not null,
+                         updated_at timestamp not null
 );
 
 create table customer (
                           uuid uuid primary key not null unique,
                           profile_uuid uuid not null references profile(uuid),
 
-                          created_at timestamp with time zone not null,
-                          updated_at timestamp with time zone not null
+                          created_at timestamp not null,
+                          updated_at timestamp not null
 );
 
 create table account (
@@ -26,6 +26,6 @@ create table account (
 
     customer_uuid uuid not null references customer(uuid),
 
-    created_at timestamp with time zone not null,
-    updated_at timestamp with time zone not null
+    created_at timestamp not null,
+    updated_at timestamp not null
 );
