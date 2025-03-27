@@ -12,28 +12,21 @@ type LoginRequest struct {
 	Password   string `json:"password"`
 }
 
-type RegisterRequest struct {
-	TelegramID int    `json:"telegram_id"`
-	Email      string `json:"email"`
-	Password   string `json:"password"`
-}
-
-type RefreshRequest struct {
-	RefreshToken string `json:"refresh_token"`
-}
-
 type AuthHandler struct {
 	authCommandHandler     *auth.AuthenticateCommandHandler
 	registerCommandHandler *auth.RegisterCommandHandler
+	refreshCommandHandler  *auth.RefreshCommandHandler
 }
 
 func NewAuthHandler(
 	authCommandHandler *auth.AuthenticateCommandHandler,
 	registerCommandHandler *auth.RegisterCommandHandler,
+	refreshCommandHandler *auth.RefreshCommandHandler,
 ) *AuthHandler {
 	return &AuthHandler{
 		authCommandHandler:     authCommandHandler,
 		registerCommandHandler: registerCommandHandler,
+		refreshCommandHandler:  refreshCommandHandler,
 	}
 }
 
@@ -43,7 +36,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	token, err := h.authCommandHandler.Handle(auth.AuthenticateCommand{
+	response, err := h.authCommandHandler.Handle(r.Context(), auth.AuthenticateCommand{
 		TelegramID: req.TelegramID,
 		Password:   req.Password,
 	})
@@ -52,7 +45,13 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	return common.JSONResponse(w, http.StatusOK, map[string]string{"token": token})
+	return common.JSONResponse(w, http.StatusOK, response)
+}
+
+type RegisterRequest struct {
+	TelegramID int    `json:"telegram_id"`
+	Email      string `json:"email"`
+	Password   string `json:"password"`
 }
 
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) error {
@@ -62,7 +61,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	token, err := h.registerCommandHandler.Handle(auth.RegisterCommand{
+	response, err := h.registerCommandHandler.Handle(r.Context(), auth.RegisterCommand{
 		TelegramID: req.TelegramID,
 		Email:      req.Email,
 		Password:   req.Password,
@@ -72,7 +71,11 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	return common.JSONResponse(w, http.StatusOK, map[string]string{"token": token})
+	return common.JSONResponse(w, http.StatusOK, response)
+}
+
+type RefreshRequest struct {
+	RefreshToken string `json:"refresh_token"`
 }
 
 func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) error {
@@ -81,4 +84,12 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) error {
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return err
 	}
+
+	response, err := h.refreshCommandHandler.Handle(r.Context(), auth.RefreshCommand{RefreshToken: req.RefreshToken})
+
+	if err != nil {
+		return err
+	}
+
+	return common.JSONResponse(w, http.StatusOK, response)
 }

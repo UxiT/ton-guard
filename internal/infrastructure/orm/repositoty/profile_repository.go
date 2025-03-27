@@ -3,6 +3,7 @@ package repositoty
 import (
 	"database/sql"
 	"decard/internal/domain/entity"
+	"decard/internal/domain/interfaces"
 	"decard/internal/domain/valueobject"
 	"time"
 )
@@ -21,7 +22,7 @@ type sqlProfile struct {
 	UpdatedAt    time.Time `db:"updated_at"`
 }
 
-func NewProfileRepository(db *sql.DB) *ProfileRepository {
+func NewProfileRepository(db *sql.DB) interfaces.ProfileRepository {
 	return &ProfileRepository{
 		db:    db,
 		table: "profile",

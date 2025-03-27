@@ -3,7 +3,6 @@ package auth
 import (
 	"context"
 	"decard/internal/domain/interfaces"
-	"decard/internal/domain/service"
 	"log/slog"
 )
 
@@ -14,27 +13,31 @@ type RefreshCommand struct {
 type RefreshCommandHandler struct {
 	logger                 *slog.Logger
 	refreshTokenRepository interfaces.RefreshTokenRepository
-	authService            service.AuthService
+	generateJWTCommand     *GenerateJWTCommandHandler
 }
 
-func NewRefreshCommandHandler(logger *slog.Logger) RefreshCommandHandler {
-	return RefreshCommandHandler{
-		logger: logger,
+func NewRefreshCommandHandler(
+	logger *slog.Logger,
+	refreshTokenRepository interfaces.RefreshTokenRepository,
+	generateJWTCommand *GenerateJWTCommandHandler,
+) *RefreshCommandHandler {
+	return &RefreshCommandHandler{
+		logger:                 logger,
+		refreshTokenRepository: refreshTokenRepository,
+		generateJWTCommand:     generateJWTCommand,
 	}
 }
 
-func (h RefreshCommandHandler) Handle(ctx context.Context, cmd RefreshCommand) (string, error) {
+func (h RefreshCommandHandler) Handle(ctx context.Context, cmd RefreshCommand) (GenerateJWTResponse, error) {
 	token, err := h.refreshTokenRepository.FindByToken(cmd.RefreshToken)
 
 	if err != nil {
-		return "", err
+		return GenerateJWTResponse{}, err
 	}
 
-	err = h.refreshTokenRepository.Delete(token.UUID)
-
-	if err != nil {
-		return "", err
+	if err = h.refreshTokenRepository.Delete(token.UUID); err != nil {
+		return GenerateJWTResponse{}, err
 	}
 
-	newToken, err :=  h.authService.GenerateRefreshToken(cmd.)
+	return h.generateJWTCommand.Handle(ctx, GenerateJWTCommand{token.ProfileUUID})
 }

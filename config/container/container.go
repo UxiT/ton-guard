@@ -34,6 +34,7 @@ func NewContainer(cfg *config.Config) *Container {
 	profileRepo := ormrepository.NewProfileRepository(db.DB)
 	accountRepo := ormrepository.NewAccountRepository(db.DB)
 	customerRepo := ormrepository.NewCustomerRepository(db.DB)
+	refreshTokenRepo := ormrepository.NewRefreshTokenRepository(db.DB, cfg.RefreshTokenTTL)
 
 	//external client
 	providerClient := provider.NewClient(*cfg)
@@ -45,10 +46,13 @@ func NewContainer(cfg *config.Config) *Container {
 	//services
 	paymentService := service.NewPaymentService(paymentAPI)
 	transactionService := service.NewTransactionService(transactionAPI)
+	authService := service.NewAuthService(logger, refreshTokenRepo)
 
 	//CQRS
-	authCommand := auth.NewAuthenticateCommandHandler(logger, profileRepo)
-	registerCommand := auth.NewRegisterCommandHandler(logger, profileRepo)
+	generateJWTCommand := auth.NewGenerateJWTCommandHandler(logger, authService)
+	authCommand := auth.NewAuthenticateCommandHandler(logger, profileRepo, generateJWTCommand)
+	registerCommand := auth.NewRegisterCommandHandler(logger, profileRepo, generateJWTCommand)
+	refreshAuthCommand := auth.NewRefreshCommandHandler(logger, refreshTokenRepo, generateJWTCommand)
 
 	getAccountCardsQuery := accounts.NewGetAccountCardsHandler(accountAPI)
 	getAccountForProfileQuery := accounts.NewGetAccountForProfileQueryHandler(logger, accountAPI, customerRepo, accountRepo)
@@ -57,7 +61,7 @@ func NewContainer(cfg *config.Config) *Container {
 	getCardTransactionsQueryHandler := transactions.NewGetCardTransactionsQueryHandler(transactionService)
 
 	//handlers
-	authHandler := handlers.NewAuthHandler(authCommand, registerCommand)
+	authHandler := handlers.NewAuthHandler(authCommand, registerCommand, refreshAuthCommand)
 	accountHandler := handlers.NewAccountHandler(
 		logger,
 		getAccountCardsQuery,
@@ -66,6 +70,7 @@ func NewContainer(cfg *config.Config) *Container {
 	)
 	paymentHandler := handlers.NewPaymentHandler(*paymentService)
 	transactionHandler := handlers.NewTransactionHandler(getCardTransactionsQueryHandler)
+	cardHandler := handlers.NewCardHandler(logger)
 
 	router := routes.NewRouter(
 		logger,
@@ -73,6 +78,7 @@ func NewContainer(cfg *config.Config) *Container {
 		accountHandler,
 		paymentHandler,
 		transactionHandler,
+		cardHandler,
 	)
 
 	return &Container{

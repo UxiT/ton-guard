@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"time"
 
 	"github.com/joho/godotenv"
 )
@@ -13,9 +14,10 @@ import (
 type Config struct {
 	Env string
 
-	ServerAddress string
-	DbUrl         string
-	JWTSecret     string
+	ServerAddress   string
+	DbUrl           string
+	JWTSecret       string
+	RefreshTokenTTL time.Duration
 
 	ProviderApiKey     string
 	ProviderBaseApiURL *url.URL

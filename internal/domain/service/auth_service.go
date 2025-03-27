@@ -12,6 +12,13 @@ type AuthService struct {
 	refreshTokenRepo interfaces.RefreshTokenRepository
 }
 
+func NewAuthService(logger *slog.Logger, refreshTokenRepo interfaces.RefreshTokenRepository) *AuthService {
+	return &AuthService{
+		logger:           logger,
+		refreshTokenRepo: refreshTokenRepo,
+	}
+}
+
 func (s AuthService) GenerateRefreshToken(profile valueobject.UUID) (*entity.RefreshToken, error) {
 	existing, err := s.refreshTokenRepo.GetLastForProfile(profile)
 	if err != nil {

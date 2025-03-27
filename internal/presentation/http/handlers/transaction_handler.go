@@ -26,11 +26,11 @@ func (h *TransactionHandler) GetTransactionsByCard(w http.ResponseWriter, r *htt
 		return fmt.Errorf("invalid card UUID")
 	}
 
-	transactions, err := h.getCardTransactionsQueryHandler.Handle(transactions.GetCardTransactionsQuery{CardUUID: cardUUID})
+	trns, err := h.getCardTransactionsQueryHandler.Handle(transactions.GetCardTransactionsQuery{CardUUID: cardUUID})
 
 	if err != nil {
 		return err
 	}
 
-	return common.JSONResponse(w, http.StatusOK, transactions)
+	return common.JSONResponse(w, http.StatusOK, trns)
 }
