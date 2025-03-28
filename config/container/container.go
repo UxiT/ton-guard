@@ -14,12 +14,12 @@ import (
 	"decard/internal/presentation/http/handlers"
 	"decard/internal/presentation/http/routes"
 	"github.com/gorilla/mux"
-	"log/slog"
+	"github.com/rs/zerolog"
 	"os"
 )
 
 type Container struct {
-	Logger *slog.Logger
+	Logger *zerolog.Logger
 	Router *mux.Router
 	DB     *sql.DB
 }
@@ -94,19 +94,23 @@ const (
 	envProduction = "production"
 )
 
-func setupLogger(env string) *slog.Logger {
-	var logger *slog.Logger
+func setupLogger(env string) *zerolog.Logger {
+	var log zerolog.Logger
+
+	logWriter := zerolog.MultiLevelWriter(os.Stdout)
 
 	switch env {
 	case envLocal:
-		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
+		zerolog.SetGlobalLevel(zerolog.TraceLevel)
 	case envDevelop:
-		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	case envProduction:
-		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
+		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	default:
-		panic("unknown env: " + env)
+		panic("unknown environment: " + env)
 	}
 
-	return logger
+	log = zerolog.New(logWriter).With().Caller().Logger()
+
+	return &log
 }

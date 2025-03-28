@@ -5,17 +5,17 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gorilla/mux"
-	"log/slog"
+	"github.com/rs/zerolog"
 	"net/http"
 )
 
 type App struct {
-	logger     *slog.Logger
+	logger     *zerolog.Logger
 	httpServer *http.Server
 }
 
 func New(
-	logger *slog.Logger,
+	logger *zerolog.Logger,
 	address string,
 	router *mux.Router,
 ) *App {
@@ -34,12 +34,7 @@ func (a *App) MusRun() {
 func (a *App) Run() error {
 	const op = "app.http.run"
 
-	logger := a.logger.With(
-		slog.String("operation", op),
-		slog.String("address", a.httpServer.Addr),
-	)
-
-	logger.Info("starting http server")
+	a.logger.Info().Str("operation", op).Str("address", a.httpServer.Addr).Msg("starting http server")
 
 	if err := a.httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return fmt.Errorf("%s: %w", op, err)
@@ -51,7 +46,7 @@ func (a *App) Run() error {
 func (a *App) Stop() {
 	const op = "app.http.stop"
 
-	a.logger.Info("stopping http server", slog.String("operation", op))
+	a.logger.Info().Str("operation", op).Msg("stopping http server")
 
 	if err := a.httpServer.Shutdown(context.Background()); err != nil {
 		panic(err)

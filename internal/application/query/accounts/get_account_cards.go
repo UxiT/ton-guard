@@ -20,7 +20,7 @@ func NewGetAccountCardsHandler(accountService interfaces.AccountService) GetAcco
 	}
 }
 
-func (h *GetAccountCardsHandler) Handle(q GetAccountCards) ([]providerEntity.Card, error) {
+func (h GetAccountCardsHandler) Handle(q GetAccountCards) ([]providerEntity.Card, error) {
 	accountUUID, err := valueobject.ParseUUID(q.AccountUUID)
 	if err != nil {
 		return nil, err

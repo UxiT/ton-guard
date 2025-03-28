@@ -4,15 +4,15 @@ import (
 	"decard/internal/domain/entity"
 	"decard/internal/domain/interfaces"
 	"decard/internal/domain/valueobject"
-	"log/slog"
+	"github.com/rs/zerolog"
 )
 
 type AuthService struct {
-	logger           *slog.Logger
+	logger           *zerolog.Logger
 	refreshTokenRepo interfaces.RefreshTokenRepository
 }
 
-func NewAuthService(logger *slog.Logger, refreshTokenRepo interfaces.RefreshTokenRepository) *AuthService {
+func NewAuthService(logger *zerolog.Logger, refreshTokenRepo interfaces.RefreshTokenRepository) *AuthService {
 	return &AuthService{
 		logger:           logger,
 		refreshTokenRepo: refreshTokenRepo,
@@ -21,8 +21,10 @@ func NewAuthService(logger *slog.Logger, refreshTokenRepo interfaces.RefreshToke
 
 func (s AuthService) GenerateRefreshToken(profile valueobject.UUID) (*entity.RefreshToken, error) {
 	existing, err := s.refreshTokenRepo.GetLastForProfile(profile)
+
 	if err != nil {
-		s.logger.Error("Error getting last refresh token for profile", slog.String("profile", profile.String()), slog.String("error", err.Error()))
+		s.logger.Error().Str("profile", profile.String()).Err(err).Msg("Error getting last refresh token for profile")
+
 		return nil, err
 	}
 
@@ -30,13 +32,13 @@ func (s AuthService) GenerateRefreshToken(profile valueobject.UUID) (*entity.Ref
 		err = s.refreshTokenRepo.Delete(existing.UUID)
 
 		if err != nil {
-			s.logger.Error("Error deleting refresh token", slog.String("error", err.Error()))
+			s.logger.Error().Err(err).Msg("Error deleting refresh token")
 			return nil, err
 		}
 	}
 
 	if err := s.refreshTokenRepo.Create(profile); err != nil {
-		s.logger.Error("Error creating refresh token", slog.String("profile", profile.String()), slog.String("error", err.Error()))
+		s.logger.Error().Str("profile", profile.String()).Err(err).Msg("Error creating refresh token")
 
 		return nil, err
 	}

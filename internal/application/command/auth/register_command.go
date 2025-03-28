@@ -6,7 +6,7 @@ import (
 	"decard/internal/domain/entity"
 	"decard/internal/domain/interfaces"
 	"decard/pkg/utils/hasher"
-	"log/slog"
+	"github.com/rs/zerolog"
 )
 
 type RegisterCommand struct {
@@ -16,13 +16,13 @@ type RegisterCommand struct {
 }
 
 type RegisterCommandHandler struct {
-	logger             *slog.Logger
+	logger             *zerolog.Logger
 	profileRepository  interfaces.ProfileRepository
 	generateJWTCommand *GenerateJWTCommandHandler
 }
 
 func NewRegisterCommandHandler(
-	logger *slog.Logger,
+	logger *zerolog.Logger,
 	profileRepository interfaces.ProfileRepository,
 	generateJWTCommand *GenerateJWTCommandHandler,
 ) *RegisterCommandHandler {
@@ -33,9 +33,9 @@ func NewRegisterCommandHandler(
 	}
 }
 
-func (h *RegisterCommandHandler) Handle(ctx context.Context, cmd RegisterCommand) (GenerateJWTResponse, error) {
+func (h RegisterCommandHandler) Handle(ctx context.Context, cmd RegisterCommand) (GenerateJWTResponse, error) {
 	const op = "application.command.register"
-	logger := h.logger.With(slog.String("operation", op))
+	logger := h.logger.With().Str("operation", op).Logger()
 
 	telegramID, err := entity.NewTelegramID(cmd.TelegramID)
 	if err != nil {
@@ -54,14 +54,16 @@ func (h *RegisterCommandHandler) Handle(ctx context.Context, cmd RegisterCommand
 
 	hashedPassword, err := hasher.Hash(cmd.Password)
 	if err != nil {
-		logger.Error("error hashing password", slog.String("error", err.Error()))
+		logger.Error().Err(err).Msg("error hashing password")
+
 		return GenerateJWTResponse{}, domain.ErrInvalidCredentials
 	}
 
 	profile := entity.NewProfile(telegramID, email, hashedPassword)
 
 	if err := h.profileRepository.Create(profile); err != nil {
-		logger.Error("error creating profile", slog.String("error", err.Error()))
+		logger.Error().Err(err).Msg("error creating profile")
+		
 		return GenerateJWTResponse{}, err
 	}
 

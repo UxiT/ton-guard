@@ -5,7 +5,7 @@ import (
 	providerentity "decard/internal/domain/entity/provider"
 	"decard/internal/domain/interfaces"
 	"decard/internal/domain/valueobject"
-	"log/slog"
+	"github.com/rs/zerolog"
 )
 
 type GetAccountForProfileQuery struct {
@@ -13,14 +13,14 @@ type GetAccountForProfileQuery struct {
 }
 
 type GetAccountForProfileQueryHandler struct {
-	logger             *slog.Logger
+	logger             *zerolog.Logger
 	accountService     interfaces.AccountService
 	customerRepository interfaces.CustomerRepository
 	accountRepository  interfaces.AccountRepository
 }
 
 func NewGetAccountForProfileQueryHandler(
-	logger *slog.Logger,
+	logger *zerolog.Logger,
 	accountService interfaces.AccountService,
 	customerRepository interfaces.CustomerRepository,
 	accountRepository interfaces.AccountRepository,
@@ -36,17 +36,19 @@ func NewGetAccountForProfileQueryHandler(
 func (h GetAccountForProfileQueryHandler) Handle(q GetAccountForProfileQuery) (*providerentity.Account, error) {
 	const op = "application.query.getAccountForProfile"
 
-	logger := h.logger.With(slog.String("operation", op))
+	logger := h.logger.With().Str("operation", op).Logger()
 
 	customer, err := h.customerRepository.FindByProfileUUID(q.ProfileUUID)
 	if err != nil {
-		logger.Error("error getting customer", slog.String("error", err.Error()))
+		logger.Error().Err(err).Msg("error getting customer")
+
 		return nil, domain.ErrCustomerNotFound
 	}
 
 	systemAccount, err := h.accountRepository.GetByCustomer(customer.UUID)
 	if err != nil {
-		logger.Error("error getting account", slog.String("error", err.Error()))
+		logger.Error().Err(err).Msg("error getting account")
+
 		return nil, domain.ErrAccountNotFound
 	}
 

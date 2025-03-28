@@ -4,7 +4,7 @@ import (
 	"decard/internal/presentation/http/common"
 	"decard/internal/presentation/http/handlers"
 	"decard/internal/presentation/http/middleware"
-	"log/slog"
+	"github.com/rs/zerolog"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -12,7 +12,7 @@ import (
 
 type APIFunc func(w http.ResponseWriter, r *http.Request) error
 
-func Make(l *slog.Logger, h APIFunc) http.HandlerFunc {
+func Make(l *zerolog.Logger, h APIFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := h(w, r); err != nil {
 			e := common.JSONErrorResponse(w, err)
@@ -21,18 +21,17 @@ func Make(l *slog.Logger, h APIFunc) http.HandlerFunc {
 				http.Error(w, "internal server error", http.StatusInternalServerError)
 			}
 
-			l.Error(
-				"http error",
-				slog.String("method", r.Method),
-				slog.String("url", r.URL.String()),
-				slog.String("error", err.Error()),
-			)
+			l.Error().
+				Str("method", r.Method).
+				Str("url", r.URL.String()).
+				Err(err).
+				Msg("http error")
 		}
 	}
 }
 
 func NewRouter(
-	logger *slog.Logger,
+	logger *zerolog.Logger,
 	authHandler *handlers.AuthHandler,
 	accountHandler *handlers.AccountHandler,
 	paymentHandler *handlers.PaymentHandler,

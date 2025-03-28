@@ -4,7 +4,6 @@ import (
 	"decard/config"
 	"decard/config/container"
 	"decard/internal/infrastructure/bootstrap"
-	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
@@ -26,9 +25,9 @@ func main() {
 
 	systemCall := <-stop
 
-	registry.Logger.Info("stopping application", slog.String("signal", systemCall.String()))
+	registry.Logger.Info().Str("signal", systemCall.String()).Msg("stopping application")
 
 	application.HTTPSrv.Stop()
 
-	registry.Logger.Info("application stopped")
+	registry.Logger.Info().Msg("application stopped")
 }

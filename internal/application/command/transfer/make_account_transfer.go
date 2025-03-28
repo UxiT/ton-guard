@@ -14,6 +14,6 @@ func NewMakeAccountTransferCommandHandler() *MakeAccountTransferCommandHandler {
 	return &MakeAccountTransferCommandHandler{}
 }
 
-func (h *MakeAccountTransferCommandHandler) Handle(cmd MakeAccountTransferCommand) error {
+func (h MakeAccountTransferCommandHandler) Handle(cmd MakeAccountTransferCommand) error {
 	return nil
 }

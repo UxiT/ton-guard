@@ -6,7 +6,7 @@ import (
 	"decard/internal/domain/entity"
 	"decard/internal/domain/interfaces"
 	"decard/pkg/utils/hasher"
-	"log/slog"
+	"github.com/rs/zerolog"
 )
 
 type AuthenticateCommand struct {
@@ -15,13 +15,13 @@ type AuthenticateCommand struct {
 }
 
 type AuthenticateCommandHandler struct {
-	logger             *slog.Logger
+	logger             *zerolog.Logger
 	profileRepository  interfaces.ProfileRepository
 	generateJWTCommand *GenerateJWTCommandHandler
 }
 
 func NewAuthenticateCommandHandler(
-	logger *slog.Logger,
+	logger *zerolog.Logger,
 	profileRepository interfaces.ProfileRepository,
 	generateJWTCommand *GenerateJWTCommandHandler,
 ) *AuthenticateCommandHandler {
@@ -35,7 +35,7 @@ func NewAuthenticateCommandHandler(
 func (h AuthenticateCommandHandler) Handle(ctx context.Context, cmd AuthenticateCommand) (GenerateJWTResponse, error) {
 	const op = "application.command.authenticate"
 
-	logger := h.logger.With(slog.String("op", op))
+	logger := h.logger.With().Str("op", op).Logger()
 
 	telegramID, err := entity.NewTelegramID(cmd.TelegramID)
 
@@ -45,13 +45,13 @@ func (h AuthenticateCommandHandler) Handle(ctx context.Context, cmd Authenticate
 
 	profile, err := h.profileRepository.FindByTelegramID(telegramID)
 	if err != nil {
-		logger.Error("error finding customer", slog.Int("telegramID", cmd.TelegramID), slog.String("error", err.Error()))
+		logger.Error().Int("telegram_id", telegramID.Int()).Err(err).Msg("error finding customer")
 
 		return GenerateJWTResponse{}, domain.ErrCustomerNotFound
 	}
 
 	if !hasher.VerifyPassword(profile.PasswordHash, cmd.Password) {
-		logger.Error("error when verifying password")
+		logger.Error().Err(err).Msg("error when verifying password")
 
 		return GenerateJWTResponse{}, domain.ErrInvalidCredentials
 	}

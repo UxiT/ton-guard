@@ -20,7 +20,7 @@ func NewGetCardTransactionsQueryHandler(transactionService *service.TransactionS
 	}
 }
 
-func (h *GetCardTransactionsQueryHandler) Handle(q GetCardTransactionsQuery) (*[]providerEntity.Transaction, error) {
+func (h GetCardTransactionsQueryHandler) Handle(q GetCardTransactionsQuery) (*[]providerEntity.Transaction, error) {
 	cardUUID, err := valueobject.ParseUUID(q.CardUUID)
 
 	if err != nil {

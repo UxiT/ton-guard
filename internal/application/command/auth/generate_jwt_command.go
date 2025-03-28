@@ -5,7 +5,7 @@ import (
 	"decard/internal/domain/service"
 	"decard/internal/domain/valueobject"
 	"decard/pkg/utils/jwt"
-	"log/slog"
+	"github.com/rs/zerolog"
 )
 
 type GenerateJWTCommand struct {
@@ -18,12 +18,12 @@ type GenerateJWTResponse struct {
 }
 
 type GenerateJWTCommandHandler struct {
-	logger      *slog.Logger
+	logger      *zerolog.Logger
 	authService *service.AuthService
 }
 
 func NewGenerateJWTCommandHandler(
-	logger *slog.Logger,
+	logger *zerolog.Logger,
 	authService *service.AuthService,
 ) *GenerateJWTCommandHandler {
 	return &GenerateJWTCommandHandler{
@@ -32,11 +32,11 @@ func NewGenerateJWTCommandHandler(
 	}
 }
 
-func (h *GenerateJWTCommandHandler) Handle(ctx context.Context, cmd GenerateJWTCommand) (GenerateJWTResponse, error) {
+func (h GenerateJWTCommandHandler) Handle(ctx context.Context, cmd GenerateJWTCommand) (GenerateJWTResponse, error) {
 	token, err := jwt.GenerateToken(cmd.ProfileUUID)
 
 	if err != nil {
-		h.logger.Error("error generating jwt token", slog.String("error", err.Error()))
+		h.logger.Error().Err(err).Msg("error generating jwt token")
 
 		return GenerateJWTResponse{}, err
 	}
@@ -44,7 +44,7 @@ func (h *GenerateJWTCommandHandler) Handle(ctx context.Context, cmd GenerateJWTC
 	refreshToken, err := h.authService.GenerateRefreshToken(cmd.ProfileUUID)
 
 	if err != nil {
-		h.logger.Error("error generating refresh token", slog.String("error", err.Error()))
+		h.logger.Error().Err(err).Msg("error generating refresh token")
 
 		return GenerateJWTResponse{}, err
 	}

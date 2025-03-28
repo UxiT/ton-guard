@@ -3,7 +3,7 @@ package auth
 import (
 	"context"
 	"decard/internal/domain/interfaces"
-	"log/slog"
+	"github.com/rs/zerolog"
 )
 
 type RefreshCommand struct {
@@ -11,13 +11,13 @@ type RefreshCommand struct {
 }
 
 type RefreshCommandHandler struct {
-	logger                 *slog.Logger
+	logger                 *zerolog.Logger
 	refreshTokenRepository interfaces.RefreshTokenRepository
 	generateJWTCommand     *GenerateJWTCommandHandler
 }
 
 func NewRefreshCommandHandler(
-	logger *slog.Logger,
+	logger *zerolog.Logger,
 	refreshTokenRepository interfaces.RefreshTokenRepository,
 	generateJWTCommand *GenerateJWTCommandHandler,
 ) *RefreshCommandHandler {
