@@ -16,6 +16,7 @@ type AccountService interface {
 	GetAccountsList() ([]providerEntity.Account, error)
 	GetAccount(account valueobject.UUID) (*providerEntity.Account, error)
 	GetAccountCards(account valueobject.UUID) ([]providerEntity.Card, error)
+	CreateAccount(name string) (*providerEntity.Account, error)
 }
 
 type TransactionService interface {

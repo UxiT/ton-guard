@@ -1,29 +1,34 @@
 package api
 
 import (
+	"bytes"
 	"context"
-	providerEntity "decard/internal/domain/entity/provider"
+	provider_entity "decard/internal/domain/entity/provider"
 	"decard/internal/domain/interfaces"
 	"decard/internal/domain/valueobject"
 	"decard/internal/infrastructure/provider"
+	"encoding/json"
 	"fmt"
+	"github.com/rs/zerolog"
 	"net/http"
 	"net/url"
 )
 
 type accountAPI struct {
+	logger *zerolog.Logger
 	client *provider.Client
 }
 
-func NewAccountApi(client *provider.Client) interfaces.AccountService {
+func NewAccountApi(logger *zerolog.Logger, client *provider.Client) interfaces.AccountService {
 	return &accountAPI{
+		logger: logger,
 		client: client,
 	}
 }
 
-func (a *accountAPI) GetAccount(account valueobject.UUID) (*providerEntity.Account, error) {
+func (a *accountAPI) GetAccount(account valueobject.UUID) (*provider_entity.Account, error) {
 	var result struct {
-		Account providerEntity.Account `json:"account"`
+		Account provider_entity.Account `json:"account"`
 	}
 
 	endpoint := a.client.BaseURL.JoinPath(fmt.Sprintf("/accounts/%s", account.String()))
@@ -42,9 +47,9 @@ func (a *accountAPI) GetAccount(account valueobject.UUID) (*providerEntity.Accou
 	return &result.Account, nil
 }
 
-func (a *accountAPI) GetAccountCards(account valueobject.UUID) ([]providerEntity.Card, error) {
+func (a *accountAPI) GetAccountCards(account valueobject.UUID) ([]provider_entity.Card, error) {
 	var result struct {
-		Cards []providerEntity.Card `json:"cards"`
+		Cards []provider_entity.Card `json:"cards"`
 	}
 
 	query := url.Values{
@@ -69,9 +74,9 @@ func (a *accountAPI) GetAccountCards(account valueobject.UUID) ([]providerEntity
 	return result.Cards, nil
 }
 
-func (a *accountAPI) GetAccountsList() ([]providerEntity.Account, error) {
+func (a *accountAPI) GetAccountsList() ([]provider_entity.Account, error) {
 	var result struct {
-		Accounts []providerEntity.Account `json:"accounts"`
+		Accounts []provider_entity.Account `json:"accounts"`
 	}
 
 	query := url.Values{
@@ -94,4 +99,33 @@ func (a *accountAPI) GetAccountsList() ([]providerEntity.Account, error) {
 	}
 
 	return result.Accounts, nil
+}
+
+func (a *accountAPI) CreateAccount(name string) (*provider_entity.Account, error) {
+	var result struct {
+		Account provider_entity.Account `json:"account"`
+	}
+
+	payload, err := json.Marshal(struct {
+		Name string `json:"name"`
+	}{
+		Name: name,
+	})
+
+	endpoint := a.client.BaseURL.JoinPath("accounts")
+	ctx := context.TODO()
+
+	request, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint.String(), bytes.NewBuffer(payload))
+
+	if err != nil {
+		return nil, fmt.Errorf("error creating request: %w", err)
+	}
+
+	if err = a.client.SendRequest(request, &result); err != nil {
+		a.logger.Error().Err(err).Msg("API call failed")
+
+		return nil, fmt.Errorf("API call failed")
+	}
+
+	return &result.Account, nil
 }

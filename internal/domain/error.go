@@ -9,14 +9,21 @@ import (
 type ErrorCode int
 
 var (
-	InternalError  ErrorCode = 100
-	EntityNotFound ErrorCode = 101
-	InvalidJWT     ErrorCode = 102
+	InternalError    ErrorCode = 100
+	EntityNotFound   ErrorCode = 101
+	InvalidJWT       ErrorCode = 102
+	ValueObjectError ErrorCode = 103
 
 	ValidationFailed ErrorCode = 200
 
 	InvalidUser        ErrorCode = 300
 	InvalidCredentials ErrorCode = 301
+	AccountExists      ErrorCode = 302
+	InvalidProfileType ErrorCode = 303
+
+	DomainOperationError       ErrorCode = 400
+	ProviderAccountCreateError ErrorCode = 401
+	SystemAccountCreateError   ErrorCode = 402
 )
 
 type ValidationConstraintError struct {
@@ -64,4 +71,9 @@ var (
 	ErrAccountNotFound  = ApplicationError{errors.New("account not found"), EntityNotFound, http.StatusNotFound}
 
 	ErrInvalidCredentials = ApplicationError{errors.New("invalid credentials"), InvalidCredentials, http.StatusUnauthorized}
+
+	ErrInvalidProfileType = ApplicationError{errors.New("invalid account type"), InvalidProfileType, http.StatusUnauthorized}
+	ErrAccountExists      = ApplicationError{errors.New("account already exists"), AccountExists, http.StatusUnprocessableEntity}
+	ErrProviderAccount    = ApplicationError{errors.New("could not create account, please contact the support"), ProviderAccountCreateError, http.StatusInternalServerError}
+	ErrSystemAccount      = ApplicationError{errors.New("could not create account, please contact the support"), SystemAccountCreateError, http.StatusInternalServerError}
 )

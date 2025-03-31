@@ -23,6 +23,7 @@ type CardRepository interface {
 
 type AccountRepository interface {
 	GetByCustomer(customer valueobject.UUID) (*entity.Account, error)
+	Create(account entity.Account) error
 }
 
 type RefreshTokenRepository interface {

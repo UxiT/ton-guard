@@ -1,7 +1,9 @@
 package entity
 
 import (
+	domaintype "decard/internal/domain/type"
 	"decard/internal/domain/valueobject"
+	"fmt"
 	"time"
 
 	"github.com/shopspring/decimal"
@@ -10,26 +12,23 @@ import (
 type Account struct {
 	UUID         valueobject.UUID
 	ExternalUUID valueobject.UUID
-	Currency     Currency
-	Status       AccountStatus
+	Currency     domaintype.Currency
+	Status       domaintype.AccountStatus
 	Balance      Balance
-	CardUUID     valueobject.UUID
+	CustomerUUID valueobject.UUID
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
 
-type Currency string
-type AccountStatus string
-
 type Balance decimal.Decimal
 
 func CreateAccount(
 	externalUUID valueobject.UUID,
-	currency Currency,
-	status AccountStatus,
+	balance float64,
+	currency string,
 ) (*Account, error) {
-	balance, err := NewBalance("0")
+	b, err := NewBalance(fmt.Sprintf("%f", balance))
 
 	if err != nil {
 		return nil, err
@@ -38,9 +37,9 @@ func CreateAccount(
 	return &Account{
 		UUID:         valueobject.NewUUID(),
 		ExternalUUID: externalUUID,
-		Currency:     currency,
-		Status:       status,
-		Balance:      *balance,
+		Currency:     domaintype.Currency(currency),
+		Status:       domaintype.AccountActive,
+		Balance:      *b,
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 	}, nil

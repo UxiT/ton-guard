@@ -13,6 +13,7 @@ func NewUUID() UUID {
 
 func ParseUUID(s string) (UUID, error) {
 	parsed, err := uuid.Parse(s)
+
 	if err != nil {
 		return UUID{}, err
 	}

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"decard/internal/domain/entity"
 	"decard/internal/domain/interfaces"
+	domaintype "decard/internal/domain/type"
 	"decard/internal/domain/valueobject"
 	"fmt"
 	"github.com/shopspring/decimal"
@@ -60,6 +61,22 @@ func (r *AccountRepository) GetByCustomer(customer valueobject.UUID) (*entity.Ac
 	return toDomainAccount(account)
 }
 
+func (r *AccountRepository) Create(account entity.Account) error {
+	_, err := r.db.Exec(
+		"INSERT INTO "+r.table+" (uuid, external_uuid, currency, status, balance, customer_uuid, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
+		account.UUID.String(),
+		account.ExternalUUID.String(),
+		account.Currency,
+		account.Status,
+		account.Balance,
+		account.CustomerUUID,
+		account.CreatedAt,
+		account.UpdatedAt,
+	)
+
+	return err
+}
+
 func toDomainAccount(a sqlAccount) (*entity.Account, error) {
 	accountUUID, err := valueobject.ParseUUID(a.UUID)
 	if err != nil {
@@ -79,8 +96,8 @@ func toDomainAccount(a sqlAccount) (*entity.Account, error) {
 	return &entity.Account{
 		UUID:         accountUUID,
 		ExternalUUID: externalUUID,
-		Currency:     entity.Currency(a.Currency),
-		Status:       entity.AccountStatus(a.Status),
+		Currency:     domaintype.Currency(a.Currency),
+		Status:       domaintype.AccountStatus(a.Status),
 		Balance:      *balance,
 		CreatedAt:    a.CreatedAt,
 		UpdatedAt:    a.UpdatedAt,
