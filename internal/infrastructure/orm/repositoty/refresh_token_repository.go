@@ -37,10 +37,10 @@ func (r RefreshTokenRepository) FindByToken(token string) (*entity.RefreshToken,
 
 	row := r.db.QueryRow("select * from refresh_token where uuid = $1", token)
 	err := row.Scan(
-		rToken.UUID,
-		rToken.ProfileUUID,
-		rToken.ExpiresAt,
-		rToken.DeletedAt,
+		&rToken.UUID,
+		&rToken.ProfileUUID,
+		&rToken.ExpiresAt,
+		&rToken.DeletedAt,
 		&rToken.CreatedAt,
 	)
 
@@ -56,10 +56,10 @@ func (r RefreshTokenRepository) GetLastForProfile(profileUUID valueobject.UUID) 
 
 	row := r.db.QueryRow("select * from refresh_token where profile_uuid = $1 and deleted_at is null", profileUUID.String())
 	err := row.Scan(
-		rToken.UUID,
-		rToken.ProfileUUID,
-		rToken.ExpiresAt,
-		rToken.DeletedAt,
+		&rToken.UUID,
+		&rToken.ProfileUUID,
+		&rToken.ExpiresAt,
+		&rToken.DeletedAt,
 		&rToken.CreatedAt,
 	)
 

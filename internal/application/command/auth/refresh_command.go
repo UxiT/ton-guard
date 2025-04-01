@@ -32,6 +32,7 @@ func (h RefreshCommandHandler) Handle(ctx context.Context, cmd RefreshCommand) (
 	token, err := h.refreshTokenRepository.FindByToken(cmd.RefreshToken)
 
 	if err != nil {
+		h.logger.Error().Err(err).Str("token", cmd.RefreshToken).Msg("refresh token not found")
 		return GenerateJWTResponse{}, err
 	}
 

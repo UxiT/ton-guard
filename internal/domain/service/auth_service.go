@@ -22,10 +22,8 @@ func NewAuthService(logger *zerolog.Logger, refreshTokenRepo interfaces.RefreshT
 func (s AuthService) GenerateRefreshToken(profile valueobject.UUID) (*entity.RefreshToken, error) {
 	existing, err := s.refreshTokenRepo.GetLastForProfile(profile)
 
-	if err != nil {
+	if err != nil && existing == nil {
 		s.logger.Error().Str("profile", profile.String()).Err(err).Msg("Error getting last refresh token for profile")
-
-		return nil, err
 	}
 
 	if existing != nil {

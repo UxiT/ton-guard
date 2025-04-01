@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/golang-jwt/jwt"
+	"github.com/rs/zerolog"
 	"io"
 	"log"
 	"net/http"
@@ -32,7 +33,7 @@ func (t *authTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 }
 
 func generateAuthJWT(apiKey string, privateKey any) (string, error) {
-	ts := time.Now().Unix() - 110
+	ts := time.Now().Unix() - 115
 
 	return jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
 		"api_key": apiKey,
@@ -46,9 +47,11 @@ type Client struct {
 
 	ApiKey     string
 	PrivateKey any
+
+	logger *zerolog.Logger
 }
 
-func NewClient(cfg config.Config) *Client {
+func NewClient(cfg config.Config, logger *zerolog.Logger) *Client {
 	httpClient := &http.Client{
 		Transport: &authTransport{
 			RoundTripper: http.DefaultTransport,
@@ -62,6 +65,7 @@ func NewClient(cfg config.Config) *Client {
 		BaseURL:    cfg.ProviderBaseApiURL,
 		ApiKey:     cfg.ProviderApiKey,
 		PrivateKey: cfg.PrivateKey,
+		logger:     logger,
 	}
 }
 
@@ -86,6 +90,8 @@ func (c *Client) SendRequest(
 	}
 
 	if resp.StatusCode != http.StatusOK {
+		c.logger.Error().Str("response", string(body)).Msg("provider error")
+
 		var errorResponse ErrorResponse
 
 		err = json.Unmarshal(body, &errorResponse)

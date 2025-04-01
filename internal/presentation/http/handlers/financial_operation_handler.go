@@ -22,11 +22,13 @@ func (h FinancialOperationHandler) TopUp(w http.ResponseWriter, r *http.Request)
 	const op = "http.handler.GetCustomerAccount"
 
 	logger := h.logger.With().Str("operation", op).Logger()
-	profileUUID, ok := r.Context().Value(middleware.ProfileUUIDKey).(valueobject.UUID)
+	_, ok := r.Context().Value(middleware.ProfileUUIDKey).(valueobject.UUID)
 
 	if !ok {
 		logger.Error().Err(domain.ErrInvalidUser).Msg("failed to assert user UUID")
 
 		return domain.ErrInvalidUser
 	}
+
+	return nil
 }

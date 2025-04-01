@@ -37,7 +37,7 @@ func NewContainer(cfg *config.Config) *Container {
 	refreshTokenRepo := ormrepository.NewRefreshTokenRepository(db.DB, cfg.RefreshTokenTTL)
 
 	//external client
-	providerClient := provider.NewClient(*cfg)
+	providerClient := provider.NewClient(*cfg, logger)
 
 	accountAPI := api.NewAccountApi(providerClient)
 	paymentAPI := api.NewPaymentApi(providerClient)
