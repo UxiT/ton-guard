@@ -1,7 +1,9 @@
 package config
 
 import (
+	"crypto/rsa"
 	"crypto/x509"
+	"encoding/base64"
 	"encoding/pem"
 	"fmt"
 	"net/url"
@@ -22,7 +24,8 @@ type Config struct {
 	ProviderApiKey     string
 	ProviderBaseApiURL *url.URL
 
-	PrivateKey any
+	PrivateKey *rsa.PrivateKey
+	PublicKey  string
 }
 
 var Cfg *Config
@@ -32,8 +35,7 @@ func init() {
 }
 
 func NewConfig() *Config {
-	err := godotenv.Load()
-	if err != nil {
+	if err := godotenv.Load(); err != nil {
 		panic(err)
 	}
 
@@ -42,12 +44,17 @@ func NewConfig() *Config {
 		panic(err)
 	}
 
-	filePrivateKey, err := os.ReadFile(fmt.Sprintf("%s/keys/private", wd))
+	privateKeyFile, err := os.ReadFile(fmt.Sprintf("%s/keys/test/private", wd))
 	if err != nil {
 		panic(err)
 	}
+	privateKey := parsePEMKey(privateKeyFile)
 
-	privateKey := parsePrivateKey(filePrivateKey)
+	publicKeyFile, err := os.ReadFile(fmt.Sprintf("%s/keys/public", wd))
+	if err != nil {
+		panic(err)
+	}
+	publicKey := base64.StdEncoding.EncodeToString(publicKeyFile)
 
 	providerBaseUrl, err := url.Parse(os.Getenv("PROVIDER_BASE_API_URL"))
 	if err != nil {
@@ -64,7 +71,8 @@ func NewConfig() *Config {
 		ProviderApiKey:     getEnv("PROVIDER_API_KEY"),
 		ProviderBaseApiURL: providerBaseUrl,
 
-		PrivateKey: privateKey,
+		PrivateKey: privateKey.(*rsa.PrivateKey),
+		PublicKey:  publicKey,
 	}
 }
 
@@ -78,9 +86,9 @@ func getEnv(key string) string {
 	return value
 }
 
-func parsePrivateKey(privateKey []byte) any {
+func parsePEMKey(privateKey []byte) any {
 	block, _ := pem.Decode(privateKey)
-	key, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+	key, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 
 	if err != nil {
 		panic(err)

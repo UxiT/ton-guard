@@ -5,6 +5,7 @@ import (
 	"decard/config"
 	"decard/internal/application/command/auth"
 	"decard/internal/application/query/accounts"
+	"decard/internal/application/query/card"
 	"decard/internal/application/query/transactions"
 	"decard/internal/domain/service"
 	"decard/internal/infrastructure/database"
@@ -13,6 +14,7 @@ import (
 	"decard/internal/infrastructure/provider/api"
 	"decard/internal/presentation/http/handlers"
 	"decard/internal/presentation/http/routes"
+	"decard/pkg/utils/decryptor"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog"
 	"os"
@@ -39,14 +41,17 @@ func NewContainer(cfg *config.Config) *Container {
 	//external client
 	providerClient := provider.NewClient(*cfg, logger)
 
-	accountAPI := api.NewAccountApi(providerClient)
+	accountAPI := api.NewAccountApi(logger, providerClient)
 	paymentAPI := api.NewPaymentApi(providerClient)
 	transactionAPI := api.NewTransactionApi(providerClient)
+	cardAPI := api.NewCardAPI(providerClient, logger, cfg.PublicKey, cfg.PrivateKey)
 
 	//services
 	paymentService := service.NewPaymentService(paymentAPI)
 	transactionService := service.NewTransactionService(transactionAPI)
 	authService := service.NewAuthService(logger, refreshTokenRepo)
+
+	decryptService := decryptor.NewDecryptor(cfg.PrivateKey)
 
 	//CQRS
 	generateJWTCommand := auth.NewGenerateJWTCommandHandler(logger, authService)
@@ -57,6 +62,8 @@ func NewContainer(cfg *config.Config) *Container {
 	getAccountCardsQuery := accounts.NewGetAccountCardsHandler(accountAPI)
 	getAccountForProfileQuery := accounts.NewGetAccountForProfileQueryHandler(logger, accountAPI, customerRepo, accountRepo)
 	getAccountListQuery := accounts.NewGetAccountListQueryHandler(logger, accountAPI)
+
+	getCardNumberQuery := card.NewGetCardNumberQueryHandler(cardAPI, decryptService)
 
 	getCardTransactionsQueryHandler := transactions.NewGetCardTransactionsQueryHandler(transactionService)
 
@@ -70,7 +77,7 @@ func NewContainer(cfg *config.Config) *Container {
 	)
 	paymentHandler := handlers.NewPaymentHandler(*paymentService)
 	transactionHandler := handlers.NewTransactionHandler(getCardTransactionsQueryHandler)
-	cardHandler := handlers.NewCardHandler(logger)
+	cardHandler := handlers.NewCardHandler(logger, getCardNumberQuery)
 
 	router := routes.NewRouter(
 		logger,

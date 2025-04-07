@@ -36,9 +36,5 @@ func (h RefreshCommandHandler) Handle(ctx context.Context, cmd RefreshCommand) (
 		return GenerateJWTResponse{}, err
 	}
 
-	if err = h.refreshTokenRepository.Delete(token.UUID); err != nil {
-		return GenerateJWTResponse{}, err
-	}
-
 	return h.generateJWTCommand.Handle(ctx, GenerateJWTCommand{token.ProfileUUID})
 }

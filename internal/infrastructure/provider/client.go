@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"crypto/rsa"
 	"decard/config"
 	"encoding/json"
 	"fmt"
@@ -15,7 +16,7 @@ import (
 
 type authTransport struct {
 	http.RoundTripper
-	PrivateKey any
+	PrivateKey *rsa.PrivateKey
 	ApiKey     string
 }
 
@@ -32,7 +33,7 @@ func (t *authTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	return t.RoundTripper.RoundTrip(req)
 }
 
-func generateAuthJWT(apiKey string, privateKey any) (string, error) {
+func generateAuthJWT(apiKey string, privateKey *rsa.PrivateKey) (string, error) {
 	ts := time.Now().Unix() - 115
 
 	return jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
@@ -103,7 +104,7 @@ func (c *Client) SendRequest(
 		return fmt.Errorf("%d: %s", resp.StatusCode, errorResponse.Message)
 	}
 
-	err = json.Unmarshal(body, result)
+	err = json.Unmarshal(body, &result)
 
 	if err != nil {
 		return fmt.Errorf("error unmarshalling response body: %w", err)

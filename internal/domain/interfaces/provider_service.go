@@ -7,6 +7,7 @@ import (
 
 type CardService interface {
 	GetCard(card valueobject.UUID) (*providerEntity.Card, error)
+	GetCardNumber(card valueobject.UUID) (string, error)
 	BlockCard(card valueobject.UUID) (*providerEntity.Card, error)
 	CloseCard(card valueobject.UUID) (*providerEntity.Card, error)
 	CreateCard() (*providerEntity.Card, error)

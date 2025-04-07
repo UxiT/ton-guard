@@ -60,11 +60,12 @@ func NewRouter(
 	protectedV1.HandleFunc("/transactions/{card}", Make(logger, transactionHandler.GetTransactionsByCard)).Methods("GET")
 
 	//Card
-	protectedV1.HandleFunc("/api/v1/cards", Make(logger, cardHandler.GetCustomerCards)).Methods("GET")
-	protectedV1.HandleFunc("/api/v1/cards", Make(logger, cardHandler.Issue)).Methods("POST")
-	protectedV1.HandleFunc("/api/v1/cards/{card}", Make(logger, cardHandler.Info)).Methods("GET")
-	protectedV1.HandleFunc("/api/v1/cards/{card}/freeze", Make(logger, cardHandler.Freeze)).Methods("POST")
-	protectedV1.HandleFunc("/api/v1/cards/{card}/block", Make(logger, cardHandler.Block)).Methods("POST")
+	protectedV1.HandleFunc("/cards", Make(logger, cardHandler.GetCustomerCards)).Methods("GET")
+	protectedV1.HandleFunc("/cards", Make(logger, cardHandler.Issue)).Methods("POST")
+	protectedV1.HandleFunc("/cards/{card}", Make(logger, cardHandler.Info)).Methods("GET")
+	protectedV1.HandleFunc("/cards/{card}/number", Make(logger, cardHandler.GetNumber)).Methods("GET")
+	protectedV1.HandleFunc("/cards/{card}/freeze", Make(logger, cardHandler.Freeze)).Methods("POST")
+	protectedV1.HandleFunc("/cards/{card}/block", Make(logger, cardHandler.Block)).Methods("POST")
 
 	//Account
 	//protected.HandleFunc("/api/v1/account", accountHandler.GetByCustomer).Methods("GET")
