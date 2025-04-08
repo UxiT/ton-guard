@@ -44,7 +44,7 @@ func NewConfig() *Config {
 		panic(err)
 	}
 
-	privateKeyFile, err := os.ReadFile(fmt.Sprintf("%s/keys/test/private", wd))
+	privateKeyFile, err := os.ReadFile(fmt.Sprintf("%s/keys/private", wd))
 	if err != nil {
 		panic(err)
 	}
@@ -88,7 +88,7 @@ func getEnv(key string) string {
 
 func parsePEMKey(privateKey []byte) any {
 	block, _ := pem.Decode(privateKey)
-	key, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	key, err := x509.ParsePKCS8PrivateKey(block.Bytes)
 
 	if err != nil {
 		panic(err)

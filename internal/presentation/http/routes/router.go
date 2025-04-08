@@ -10,6 +10,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// Изменить так, чтобы можно было прокидывать структуру кастомного реквеста, он сам
+// валидируется и прокидывается в функцию + настройка логгера тоже на этом уровне
 type APIFunc func(w http.ResponseWriter, r *http.Request) error
 
 func Make(l *zerolog.Logger, h APIFunc) http.HandlerFunc {
@@ -37,6 +39,7 @@ func NewRouter(
 	paymentHandler *handlers.PaymentHandler,
 	transactionHandler *handlers.TransactionHandler,
 	cardHandler *handlers.CardHandler,
+	operationsHandler *handlers.FinancialOperationHandler,
 ) *mux.Router {
 	r := mux.NewRouter()
 
@@ -63,9 +66,17 @@ func NewRouter(
 	protectedV1.HandleFunc("/cards", Make(logger, cardHandler.GetCustomerCards)).Methods("GET")
 	protectedV1.HandleFunc("/cards", Make(logger, cardHandler.Issue)).Methods("POST")
 	protectedV1.HandleFunc("/cards/{card}", Make(logger, cardHandler.Info)).Methods("GET")
+
 	protectedV1.HandleFunc("/cards/{card}/number", Make(logger, cardHandler.GetNumber)).Methods("GET")
+	protectedV1.HandleFunc("/cards/{card}/3ds", Make(logger, cardHandler.Get3DS)).Methods("GET")
+	protectedV1.HandleFunc("/cards/{card}/cvv", Make(logger, cardHandler.GetCVV)).Methods("GET")
+	protectedV1.HandleFunc("/cards/{card}/pin", Make(logger, cardHandler.GetPIN)).Methods("GET")
+
 	protectedV1.HandleFunc("/cards/{card}/freeze", Make(logger, cardHandler.Freeze)).Methods("POST")
 	protectedV1.HandleFunc("/cards/{card}/block", Make(logger, cardHandler.Block)).Methods("POST")
+
+	//TopUp
+	protectedV1.HandleFunc("/operations/top-up", Make(logger, operationsHandler.TopUp)).Methods("POST")
 
 	//Account
 	//protected.HandleFunc("/api/v1/account", accountHandler.GetByCustomer).Methods("GET")

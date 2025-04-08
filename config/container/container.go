@@ -51,7 +51,7 @@ func NewContainer(cfg *config.Config) *Container {
 	transactionService := service.NewTransactionService(transactionAPI)
 	authService := service.NewAuthService(logger, refreshTokenRepo)
 
-	decryptService := decryptor.NewDecryptor(cfg.PrivateKey)
+	decryptService := decryptor.NewDecryptor(cfg.PrivateKey, logger)
 
 	//CQRS
 	generateJWTCommand := auth.NewGenerateJWTCommandHandler(logger, authService)
@@ -63,7 +63,7 @@ func NewContainer(cfg *config.Config) *Container {
 	getAccountForProfileQuery := accounts.NewGetAccountForProfileQueryHandler(logger, accountAPI, customerRepo, accountRepo)
 	getAccountListQuery := accounts.NewGetAccountListQueryHandler(logger, accountAPI)
 
-	getCardNumberQuery := card.NewGetCardNumberQueryHandler(cardAPI, decryptService)
+	getCardNumberQuery := card.NewGetCardNumberQueryHandler(cardAPI, decryptService, logger)
 
 	getCardTransactionsQueryHandler := transactions.NewGetCardTransactionsQueryHandler(transactionService)
 

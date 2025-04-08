@@ -34,7 +34,7 @@ func (t *authTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 }
 
 func generateAuthJWT(apiKey string, privateKey *rsa.PrivateKey) (string, error) {
-	ts := time.Now().Unix() - 115
+	ts := time.Now().Unix()
 
 	return jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
 		"api_key": apiKey,

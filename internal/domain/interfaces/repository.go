@@ -32,3 +32,6 @@ type RefreshTokenRepository interface {
 	Delete(token valueobject.RefreshToken) error
 	Create(profileUUID valueobject.UUID) error
 }
+
+type TopUpRepository interface {
+}

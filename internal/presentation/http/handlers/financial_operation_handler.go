@@ -18,6 +18,11 @@ func NewFinancialOperationHandler(logger *zerolog.Logger) *FinancialOperationHan
 	}
 }
 
+type topUpRequest struct {
+	Amount  string `json:"amount"`
+	Network string `json:"network"`
+}
+
 func (h FinancialOperationHandler) TopUp(w http.ResponseWriter, r *http.Request) error {
 	const op = "http.handler.GetCustomerAccount"
 

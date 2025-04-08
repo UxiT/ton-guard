@@ -7,10 +7,14 @@ import (
 
 type CardService interface {
 	GetCard(card valueobject.UUID) (*providerEntity.Card, error)
-	GetCardNumber(card valueobject.UUID) (string, error)
 	BlockCard(card valueobject.UUID) (*providerEntity.Card, error)
 	CloseCard(card valueobject.UUID) (*providerEntity.Card, error)
 	CreateCard() (*providerEntity.Card, error)
+
+	GetCardNumber(card valueobject.UUID) (string, error)
+	GetCardCVV(card valueobject.UUID) (string, error)
+	GetCard3DS(card valueobject.UUID) (string, error)
+	GetCardPIN(card valueobject.UUID) (string, error)
 }
 
 type AccountService interface {

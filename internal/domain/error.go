@@ -64,6 +64,8 @@ func (e ApplicationError) Error() string {
 }
 
 var (
+	ErrInternal = ApplicationError{errors.New("internal error"), InternalError, http.StatusInternalServerError}
+
 	ErrInvalidJWT  = ApplicationError{errors.New("invalid jwt token"), InvalidJWT, http.StatusUnauthorized}
 	ErrInvalidUser = ApplicationError{errors.New("invalid user"), InvalidUser, http.StatusUnauthorized}
 

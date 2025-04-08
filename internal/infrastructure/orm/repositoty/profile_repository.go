@@ -72,9 +72,9 @@ func (r *ProfileRepository) FindByTelegramID(telegramID entity.TelegramID) (*ent
 func (r *ProfileRepository) Create(profile entity.Profile) error {
 	_, err := r.db.Exec(
 		"INSERT INTO profile (uuid, telegram_id, email, password_hash, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)",
-		profile.UUID,
-		profile.TelegramID,
-		profile.Email,
+		profile.UUID.String(),
+		profile.TelegramID.Int(),
+		profile.Email.String(),
 		profile.PasswordHash,
 		time.Now(),
 		time.Now(),

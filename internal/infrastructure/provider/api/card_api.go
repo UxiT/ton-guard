@@ -60,36 +60,6 @@ func (a *cardApi) GetCard(card valueobject.UUID) (*providerEntity.Card, error) {
 	return &result.Card, nil
 }
 
-type PublicKeyPayload struct {
-	PublicKey string `json:"public_key"`
-}
-
-func (a *cardApi) GetCardNumber(card valueobject.UUID) (string, error) {
-	var response struct {
-		Number string `json:"encrypted_card_number"`
-	}
-
-	payload, err := json.Marshal(PublicKeyPayload{
-		PublicKey: a.publicKey,
-	})
-
-	if err != nil {
-		return "s", err
-	}
-
-	endpoint := a.client.BaseURL.JoinPath(fmt.Sprintf("cards/%s/encrypted-card-number", card.String()))
-	request, err := http.NewRequestWithContext(context.TODO(), http.MethodPost, endpoint.String(), bytes.NewBuffer(payload))
-	if err != nil {
-		return "s", err
-	}
-
-	if err = a.client.SendRequest(request, &response); err != nil {
-		return "s", err
-	}
-
-	return response.Number, nil
-}
-
 func (a *cardApi) BlockCard(card valueobject.UUID) (*providerEntity.Card, error) {
 	result := new(cardResponse)
 
@@ -146,4 +116,112 @@ func (a *cardApi) CreateCard() (*providerEntity.Card, error) {
 	}
 
 	return &result.Card, nil
+}
+
+type PublicKeyPayload struct {
+	PublicKey string `json:"public_key"`
+}
+
+func (a *cardApi) GetCardNumber(card valueobject.UUID) (string, error) {
+	var response struct {
+		Number string `json:"encrypted_card_number"`
+	}
+
+	payload, err := json.Marshal(PublicKeyPayload{
+		PublicKey: a.publicKey,
+	})
+
+	if err != nil {
+		return "", err
+	}
+
+	endpoint := a.client.BaseURL.JoinPath(fmt.Sprintf("cards/%s/encrypted-card-number", card.String()))
+	request, err := http.NewRequestWithContext(context.TODO(), http.MethodPost, endpoint.String(), bytes.NewBuffer(payload))
+	if err != nil {
+		return "", err
+	}
+
+	if err = a.client.SendRequest(request, &response); err != nil {
+		return "", err
+	}
+
+	return response.Number, nil
+}
+
+func (a *cardApi) GetCardCVV(card valueobject.UUID) (string, error) {
+	var response struct {
+		Number string `json:"encrypted_cvv2"`
+	}
+
+	payload, err := json.Marshal(PublicKeyPayload{
+		PublicKey: a.publicKey,
+	})
+
+	if err != nil {
+		return "", err
+	}
+
+	endpoint := a.client.BaseURL.JoinPath(fmt.Sprintf("cards/%s/encrypted-cvv2", card.String()))
+	request, err := http.NewRequestWithContext(context.TODO(), http.MethodPost, endpoint.String(), bytes.NewBuffer(payload))
+	if err != nil {
+		return "", err
+	}
+
+	if err = a.client.SendRequest(request, &response); err != nil {
+		return "", err
+	}
+
+	return response.Number, nil
+}
+
+func (a *cardApi) GetCard3DS(card valueobject.UUID) (string, error) {
+	var response struct {
+		Number string `json:"encrypted_3ds_password"`
+	}
+
+	payload, err := json.Marshal(PublicKeyPayload{
+		PublicKey: a.publicKey,
+	})
+
+	if err != nil {
+		return "", err
+	}
+
+	endpoint := a.client.BaseURL.JoinPath(fmt.Sprintf("cards/%s/encrypted-3ds-password", card.String()))
+	request, err := http.NewRequestWithContext(context.TODO(), http.MethodPost, endpoint.String(), bytes.NewBuffer(payload))
+	if err != nil {
+		return "", err
+	}
+
+	if err = a.client.SendRequest(request, &response); err != nil {
+		return "", err
+	}
+
+	return response.Number, nil
+}
+
+func (a *cardApi) GetCardPIN(card valueobject.UUID) (string, error) {
+	var response struct {
+		Number string `json:"encrypted_pin"`
+	}
+
+	payload, err := json.Marshal(PublicKeyPayload{
+		PublicKey: a.publicKey,
+	})
+
+	if err != nil {
+		return "", err
+	}
+
+	endpoint := a.client.BaseURL.JoinPath(fmt.Sprintf("cards/%s/encrypted-pin", card.String()))
+	request, err := http.NewRequestWithContext(context.TODO(), http.MethodPost, endpoint.String(), bytes.NewBuffer(payload))
+	if err != nil {
+		return "", err
+	}
+
+	if err = a.client.SendRequest(request, &response); err != nil {
+		return "", err
+	}
+
+	return response.Number, nil
 }

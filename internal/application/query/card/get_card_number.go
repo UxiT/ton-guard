@@ -4,6 +4,7 @@ import (
 	"decard/internal/domain/interfaces"
 	"decard/internal/domain/valueobject"
 	"decard/pkg/utils/decryptor"
+	"github.com/rs/zerolog"
 )
 
 type GetCardNumberQuery struct {
@@ -17,12 +18,18 @@ type GetCardNumberResponse struct {
 type GetCardNumberQueryHandler struct {
 	cardAPI        interfaces.CardService
 	decryptService *decryptor.Decryptor
+	logger         *zerolog.Logger
 }
 
-func NewGetCardNumberQueryHandler(cardAPI interfaces.CardService, decryptService *decryptor.Decryptor) *GetCardNumberQueryHandler {
+func NewGetCardNumberQueryHandler(
+	cardAPI interfaces.CardService,
+	decryptService *decryptor.Decryptor,
+	logger *zerolog.Logger,
+) *GetCardNumberQueryHandler {
 	return &GetCardNumberQueryHandler{
 		cardAPI:        cardAPI,
 		decryptService: decryptService,
+		logger:         logger,
 	}
 }
 
@@ -35,6 +42,8 @@ func (h GetCardNumberQueryHandler) Handle(query GetCardNumberQuery) (GetCardNumb
 
 	encryptedNumber, err := h.cardAPI.GetCardNumber(cardUUID)
 	if err != nil {
+		h.logger.Error().Err(err).Str("cardUUID", query.CardUUID).Msg("cannot get card number")
+
 		return GetCardNumberResponse{}, err
 	}
 
