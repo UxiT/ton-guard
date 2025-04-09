@@ -34,4 +34,7 @@ type RefreshTokenRepository interface {
 }
 
 type TopUpRepository interface {
+	Create(topUp entity.TopUp) error
+	GetByUUID(uuid valueobject.UUID) (*entity.TopUp, error)
+	SetStatus(uuid valueobject.UUID, status entity.TopUpStatus) error
 }

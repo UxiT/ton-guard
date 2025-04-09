@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"decard/internal/domain/entity"
 	"decard/internal/domain/interfaces"
-	domaintype "decard/internal/domain/type"
 	"decard/internal/domain/valueobject"
 	"github.com/shopspring/decimal"
 	"time"
@@ -38,13 +37,46 @@ func (r *TopUpRepository) Create(topUp entity.TopUp) error {
 	_, err := r.db.Exec(
 		"INSERT INTO "+r.table+" (uuid, profile_uuid, amount, network, status, is_closed, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
 		topUp.UUID.String(),
-		topUp.Profile.String(),
+		topUp.Customer.String(),
 		topUp.Amount,
 		topUp.Network,
 		topUp.Status,
 		topUp.IsClosed,
 		topUp.CreatedAt,
 		topUp.UpdatedAt,
+	)
+
+	return err
+}
+
+func (r *TopUpRepository) GetByUUID(uuid valueobject.UUID) (*entity.TopUp, error) {
+	var topUp sqlTopUp
+
+	row := r.db.QueryRow("SELECT * FROM top_up WHERE uuid = $1", uuid.String())
+	err := row.Scan(
+		&topUp.UUID,
+		&topUp.ProfileUUID,
+		&topUp.Amount,
+		&topUp.Network,
+		&topUp.Status,
+		&topUp.IsClosed,
+		&topUp.CreatedAt,
+		&topUp.UpdatedAt,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return toDomainTopUp(topUp)
+}
+
+func (r *TopUpRepository) SetStatus(uuid valueobject.UUID, status entity.TopUpStatus) error {
+	_, err := r.db.Exec(
+		"UPDATE "+r.table+" SET status = $1, updated_at = $2 WHERE uuid = $3",
+		status,
+		time.Now(),
+		uuid.String(),
 	)
 
 	return err
@@ -61,18 +93,13 @@ func toDomainTopUp(t sqlTopUp) (*entity.TopUp, error) {
 		return nil, err
 	}
 
-	balance, err := entity.NewBalance(a.Balance.String())
-	if err != nil {
-		return nil, err
-	}
-
 	return &entity.TopUp{
 		UUID:      accountUUID,
-		Profile:   profileUUID,
-		Amount:    domaintype.Currency(a.Currency),
-		Status:    domaintype.AccountStatus(a.Status),
-		Balance:   *balance,
-		CreatedAt: a.CreatedAt,
-		UpdatedAt: a.UpdatedAt,
+		Customer:  profileUUID,
+		Amount:    t.Amount,
+		Status:    entity.TopUpStatus(t.Status),
+		IsClosed:  t.IsClosed,
+		CreatedAt: t.CreatedAt,
+		UpdatedAt: t.UpdatedAt,
 	}, nil
 }

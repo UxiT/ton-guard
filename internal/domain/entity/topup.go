@@ -2,6 +2,7 @@ package entity
 
 import (
 	"decard/internal/domain/valueobject"
+	"github.com/shopspring/decimal"
 	"time"
 )
 
@@ -18,11 +19,24 @@ const (
 
 type TopUp struct {
 	UUID      valueobject.UUID
-	Profile   valueobject.UUID
-	Amount    string
+	Customer  valueobject.UUID
+	Amount    decimal.Decimal
 	Network   string
 	Status    TopUpStatus
 	IsClosed  bool
 	CreatedAt time.Time
 	UpdatedAt time.Time
+}
+
+func NewTopUp(customer valueobject.UUID, amount decimal.Decimal, network string) TopUp {
+	return TopUp{
+		UUID:      valueobject.NewUUID(),
+		Customer:  customer,
+		Amount:    amount,
+		Network:   network,
+		Status:    WaitingForTxID,
+		IsClosed:  false,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
 }
