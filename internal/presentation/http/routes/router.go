@@ -5,6 +5,8 @@ import (
 	"decard/internal/domain/valueobject"
 	"decard/internal/presentation/http/common"
 	"decard/internal/presentation/http/handlers"
+	"decard/internal/presentation/http/handlers/acoount"
+	"decard/internal/presentation/http/handlers/acoount/request"
 	"decard/internal/presentation/http/middleware"
 	"encoding/json"
 	"github.com/rs/zerolog"
@@ -81,7 +83,7 @@ func HandleProtected(l *zerolog.Logger, h protectedAPIFunc, req common.Request) 
 func NewRouter(
 	logger *zerolog.Logger,
 	authHandler *handlers.AuthHandler,
-	accountHandler *handlers.AccountHandler,
+	accountHandler *acoount.AccountHandler,
 	paymentHandler *handlers.PaymentHandler,
 	transactionHandler *handlers.TransactionHandler,
 	cardHandler *handlers.CardHandler,
@@ -100,9 +102,9 @@ func NewRouter(
 	protectedV1.Use(middleware.AuthMiddleware)
 
 	// Protected routes
-	protectedV1.HandleFunc("/account", HandleProtected(logger, accountHandler.GetCustomerAccount)).Methods("GET")
-	protectedV1.HandleFunc("/accounts", HandleProtected(logger, accountHandler.GetList)).Methods("GET")
-	protectedV1.HandleFunc("/account/{account}/cards", HandleProtected(logger, accountHandler.GetAccountCards)).Methods("GET")
+	protectedV1.HandleFunc("/account", HandleProtected(logger, accountHandler.GetCustomerAccount, nil)).Methods("GET")
+	protectedV1.HandleFunc("/accounts", HandleProtected(logger, accountHandler.GetList, nil)).Methods("GET")
+	protectedV1.HandleFunc("/account/{account}/cards", HandleProtected(logger, accountHandler.GetAccountCards, request.GetAccountCardsRequest{})).Methods("GET")
 
 	protectedV1.HandleFunc("/transfer", HandleProtected(logger, paymentHandler.Transfer)).Methods("POST")
 

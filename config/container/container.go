@@ -13,6 +13,7 @@ import (
 	"decard/internal/infrastructure/provider"
 	"decard/internal/infrastructure/provider/api"
 	"decard/internal/presentation/http/handlers"
+	"decard/internal/presentation/http/handlers/acoount"
 	"decard/internal/presentation/http/routes"
 	"decard/pkg/utils/decryptor"
 	"github.com/gorilla/mux"
@@ -69,7 +70,7 @@ func NewContainer(cfg *config.Config) *Container {
 
 	//handlers
 	authHandler := handlers.NewAuthHandler(authCommand, registerCommand, refreshAuthCommand)
-	accountHandler := handlers.NewAccountHandler(
+	accountHandler := acoount.NewAccountHandler(
 		logger,
 		getAccountCardsQuery,
 		getAccountForProfileQuery,
