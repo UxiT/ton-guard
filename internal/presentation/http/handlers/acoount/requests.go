@@ -1,4 +1,4 @@
-package request
+package acoount
 
 type GetAccountCardsRequest struct {
 	Account string `json:"account"`

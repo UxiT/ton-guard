@@ -14,6 +14,9 @@ import (
 	"decard/internal/infrastructure/provider/api"
 	"decard/internal/presentation/http/handlers"
 	"decard/internal/presentation/http/handlers/acoount"
+	auth2 "decard/internal/presentation/http/handlers/auth"
+	"decard/internal/presentation/http/handlers/payment"
+	"decard/internal/presentation/http/handlers/transaction"
 	"decard/internal/presentation/http/routes"
 	"decard/pkg/utils/decryptor"
 	"github.com/gorilla/mux"
@@ -65,20 +68,31 @@ func NewContainer(cfg *config.Config) *Container {
 	getAccountListQuery := accounts.NewGetAccountListQueryHandler(logger, accountAPI)
 
 	getCardNumberQuery := card.NewGetCardNumberQueryHandler(cardAPI, decryptService, logger)
+	getCardCVVQuery := card.NewGetCardCVVQueryHandler(cardAPI, decryptService, logger)
+	getCard3DSQuery := card.NewGetCard3DSQueryHandler(cardAPI, decryptService, logger)
+	getCardPINQuery := card.NewGetCardPINQueryHandler(cardAPI, decryptService, logger)
 
 	getCardTransactionsQueryHandler := transactions.NewGetCardTransactionsQueryHandler(transactionService)
 
 	//handlers
-	authHandler := handlers.NewAuthHandler(authCommand, registerCommand, refreshAuthCommand)
+	authHandler := auth2.NewAuthHandler(authCommand, registerCommand, refreshAuthCommand)
 	accountHandler := acoount.NewAccountHandler(
 		logger,
 		getAccountCardsQuery,
 		getAccountForProfileQuery,
 		getAccountListQuery,
 	)
-	paymentHandler := handlers.NewPaymentHandler(*paymentService)
-	transactionHandler := handlers.NewTransactionHandler(getCardTransactionsQueryHandler)
-	cardHandler := handlers.NewCardHandler(logger, getCardNumberQuery)
+	paymentHandler := payment.NewPaymentHandler(*paymentService)
+	transactionHandler := transaction.NewTransactionHandler(getCardTransactionsQueryHandler)
+	cardHandler := handlers.NewCardHandler(
+		logger,
+		getCardNumberQuery,
+		getCard3DSQuery,
+		getCardPINQuery,
+		getCardCVVQuery,
+	)
+
+	operationsHandler := handlers.NewFinancialOperationHandler(logger)
 
 	router := routes.NewRouter(
 		logger,
@@ -87,6 +101,7 @@ func NewContainer(cfg *config.Config) *Container {
 		paymentHandler,
 		transactionHandler,
 		cardHandler,
+		operationsHandler,
 	)
 
 	return &Container{

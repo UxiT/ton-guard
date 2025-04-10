@@ -4,7 +4,6 @@ import (
 	"decard/internal/application/query/accounts"
 	"decard/internal/domain/valueobject"
 	"decard/internal/presentation/http/common"
-	"decard/internal/presentation/http/handlers/acoount/request"
 	"github.com/rs/zerolog"
 	"net/http"
 )
@@ -30,7 +29,7 @@ func NewAccountHandler(
 	}
 }
 
-func (h *AccountHandler) GetCustomerAccount(w http.ResponseWriter, r common.Request, profileUUID valueobject.UUID) error {
+func (h *AccountHandler) GetCustomerAccount(w http.ResponseWriter, r any, profileUUID valueobject.UUID) error {
 	const op = "http.handler.GetCustomerAccount"
 
 	logger := h.logger.With().Str("operation", op).Logger()
@@ -47,7 +46,7 @@ func (h *AccountHandler) GetCustomerAccount(w http.ResponseWriter, r common.Requ
 
 }
 
-func (h *AccountHandler) GetList(w http.ResponseWriter, r common.Request, profileUUID valueobject.UUID) error {
+func (h *AccountHandler) GetList(w http.ResponseWriter, r any, profileUUID valueobject.UUID) error {
 	accountList, err := h.getAccountListQuery.Handle()
 	if err != nil {
 		return err
@@ -56,8 +55,10 @@ func (h *AccountHandler) GetList(w http.ResponseWriter, r common.Request, profil
 	return common.JSONResponse(w, http.StatusOK, accountList)
 }
 
-func (h *AccountHandler) GetAccountCards(w http.ResponseWriter, r request.GetAccountCardsRequest, profileUUID valueobject.UUID) error {
-	cards, err := h.getAccountCardsQuery.Handle(accounts.GetAccountCards{AccountUUID: r.Account})
+func (h *AccountHandler) GetAccountCards(w http.ResponseWriter, r any, profileUUID valueobject.UUID) error {
+	req := r.(*GetAccountCardsRequest)
+
+	cards, err := h.getAccountCardsQuery.Handle(accounts.GetAccountCards{AccountUUID: req.Account})
 	if err != nil {
 		return err
 	}

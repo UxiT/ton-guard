@@ -36,17 +36,8 @@ func NewCardHandler(
 	}
 }
 
-func (h *CardHandler) GetCustomerCards(w http.ResponseWriter, r *http.Request) error {
+func (h *CardHandler) GetCustomerCards(w http.ResponseWriter, r any, profileUUID valueobject.UUID) error {
 	const op = "http.handler.GetCustomerCards"
-
-	logger := h.logger.With().Str("operation", op).Logger()
-	_, ok := r.Context().Value(middleware.ProfileUUIDKey).(valueobject.UUID)
-
-	if !ok {
-		logger.Error().Err(domain.ErrInvalidUser).Msg("failed to assert user UUID")
-
-		return domain.ErrInvalidUser
-	}
 
 	return nil
 }

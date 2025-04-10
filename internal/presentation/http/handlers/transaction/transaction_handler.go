@@ -1,10 +1,9 @@
-package handlers
+package transaction
 
 import (
 	"decard/internal/application/query/transactions"
+	"decard/internal/domain/valueobject"
 	"decard/internal/presentation/http/common"
-	"fmt"
-	"github.com/gorilla/mux"
 	"net/http"
 )
 
@@ -18,15 +17,10 @@ func NewTransactionHandler(getCardTransactionsQueryHandler *transactions.GetCard
 	}
 }
 
-func (h *TransactionHandler) GetTransactionsByCard(w http.ResponseWriter, r *http.Request) error {
-	vars := mux.Vars(r)
-	cardUUID, ok := vars["card"]
+func (h *TransactionHandler) GetTransactionsByCard(w http.ResponseWriter, r any, profileUUID valueobject.UUID) error {
+	req := r.(*GetCardTransactionRequest)
 
-	if !ok {
-		return fmt.Errorf("invalid card UUID")
-	}
-
-	trns, err := h.getCardTransactionsQueryHandler.Handle(transactions.GetCardTransactionsQuery{CardUUID: cardUUID})
+	trns, err := h.getCardTransactionsQueryHandler.Handle(transactions.GetCardTransactionsQuery{CardUUID: req.Card})
 
 	if err != nil {
 		return err

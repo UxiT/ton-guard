@@ -7,7 +7,7 @@ import (
 	"decard/internal/domain"
 	"encoding/base64"
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
+	"regexp"
 	"strings"
 )
 
@@ -24,24 +24,40 @@ func NewDecryptor(privateKey *rsa.PrivateKey, logger *zerolog.Logger) *Decryptor
 }
 
 func (d Decryptor) Decrypt(b64EncodedMessage string) (string, error) {
-	message := strings.ReplaceAll(b64EncodedMessage, "-----BEGIN CardNumber MESSAGE-----", "")
-	message = strings.ReplaceAll(message, "-----END CardNumber MESSAGE-----", "")
+	re, err := regexp.Compile(`-----BEGIN (\w+) MESSAGE-----\n([\s\S]*?)\n-----END \1 MESSAGE-----`)
+	if err != nil {
+		d.logger.Error().Err(err).Msg("Failed to compile regex")
+
+		return "", err
+	}
+
+	matches := re.FindStringSubmatch(b64EncodedMessage)
+	label := matches[1]
+
+	message := strings.TrimSpace(matches[2])
 	message = strings.ReplaceAll(message, "\n", "")
 
-	data, err := base64.StdEncoding.DecodeString(message)
+	decodedMessage, err := base64.StdEncoding.DecodeString(message)
 	if err != nil {
-		d.logger.Error().Err(err).Str("message", b64EncodedMessage).Msg("failed to decrypt message")
+		d.logger.Error().Err(err).Str("message", b64EncodedMessage).Msg("failed to decode message")
 
 		return "", domain.ErrInternal
 	}
 
-	r, err := d.privateKey.Decrypt(rand.Reader, data, &rsa.OAEPOptions{Hash: crypto.SHA256, Label: []byte("CardNumber")})
+	r, err := d.privateKey.Decrypt(rand.Reader, decodedMessage, &rsa.OAEPOptions{
+		Hash:  crypto.SHA256,
+		Label: []byte(label),
+	})
 
 	if err != nil {
-		panic(err)
-	}
+		d.logger.Error().
+			Err(err).
+			Str("message", message).
+			Str("label", label).
+			Msg("failed to decrypt message")
 
-	log.Printf("%s", r)
+		return "", err
+	}
 
 	return string(r), nil
 }
