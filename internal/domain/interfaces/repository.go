@@ -37,4 +37,6 @@ type TopUpRepository interface {
 	Create(topUp entity.TopUp) error
 	GetByUUID(uuid valueobject.UUID) (*entity.TopUp, error)
 	SetStatus(uuid valueobject.UUID, status entity.TopUpStatus) error
+	AddTransactionID(uuid valueobject.UUID, transactionID string) error
+	GetCustomerCurrentTopUp(profileUUID valueobject.UUID) (*entity.TopUp, error)
 }

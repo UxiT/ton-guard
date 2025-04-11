@@ -12,9 +12,10 @@ import (
 	ormrepository "decard/internal/infrastructure/orm/repositoty"
 	"decard/internal/infrastructure/provider"
 	"decard/internal/infrastructure/provider/api"
-	"decard/internal/presentation/http/handlers"
 	"decard/internal/presentation/http/handlers/acoount"
 	auth2 "decard/internal/presentation/http/handlers/auth"
+	card2 "decard/internal/presentation/http/handlers/card"
+	"decard/internal/presentation/http/handlers/operation"
 	"decard/internal/presentation/http/handlers/payment"
 	"decard/internal/presentation/http/handlers/transaction"
 	"decard/internal/presentation/http/routes"
@@ -84,7 +85,7 @@ func NewContainer(cfg *config.Config) *Container {
 	)
 	paymentHandler := payment.NewPaymentHandler(*paymentService)
 	transactionHandler := transaction.NewTransactionHandler(getCardTransactionsQueryHandler)
-	cardHandler := handlers.NewCardHandler(
+	cardHandler := card2.NewCardHandler(
 		logger,
 		getCardNumberQuery,
 		getCard3DSQuery,
@@ -92,7 +93,7 @@ func NewContainer(cfg *config.Config) *Container {
 		getCardCVVQuery,
 	)
 
-	operationsHandler := handlers.NewFinancialOperationHandler(logger)
+	operationsHandler := operation.NewFinancialOperationHandler(logger)
 
 	router := routes.NewRouter(
 		logger,

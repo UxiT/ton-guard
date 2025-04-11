@@ -18,25 +18,27 @@ const (
 )
 
 type TopUp struct {
-	UUID      valueobject.UUID
-	Customer  valueobject.UUID
-	Amount    decimal.Decimal
-	Network   string
-	Status    TopUpStatus
-	IsClosed  bool
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	UUID          valueobject.UUID
+	Customer      valueobject.UUID
+	Amount        decimal.Decimal
+	Network       string
+	Status        TopUpStatus
+	TransactionID *string
+	IsClosed      bool
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
 }
 
 func NewTopUp(customer valueobject.UUID, amount decimal.Decimal, network string) TopUp {
 	return TopUp{
-		UUID:      valueobject.NewUUID(),
-		Customer:  customer,
-		Amount:    amount,
-		Network:   network,
-		Status:    WaitingForTxID,
-		IsClosed:  false,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		UUID:          valueobject.NewUUID(),
+		Customer:      customer,
+		Amount:        amount,
+		Network:       network,
+		Status:        WaitingForTxID,
+		TransactionID: nil,
+		IsClosed:      false,
+		CreatedAt:     time.Now(),
+		UpdatedAt:     time.Now(),
 	}
 }

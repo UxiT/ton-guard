@@ -4,6 +4,7 @@ create table top_up (
     amount numeric(25, 18) not null,
     network varchar not null,
     status varchar not null,
+    transaction_id varchar nullable,
     is_closed bool not null default false,
 
     deleted_at timestamp,

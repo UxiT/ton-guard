@@ -20,14 +20,14 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		}
 
 		tokenString := strings.Replace(authHeader, "Bearer ", "", 1)
-		userUUID, err := jwt.ValidateToken(tokenString)
+		profileUUID, err := jwt.ValidateToken(tokenString)
 
 		if err != nil {
 			http.Error(w, "Invalid token", http.StatusUnauthorized)
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), ProfileUUIDKey, userUUID)
+		ctx := context.WithValue(r.Context(), ProfileUUIDKey, profileUUID)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

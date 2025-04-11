@@ -15,12 +15,13 @@ type TopUpRepository struct {
 }
 
 type sqlTopUp struct {
-	UUID        string          `db:"uuid"`
-	ProfileUUID string          `db:"profile_uuid"`
-	Amount      decimal.Decimal `db:"amount"`
-	Network     string          `db:"network"`
-	Status      string          `db:"status"`
-	IsClosed    bool            `db:"is_closed"`
+	UUID          string          `db:"uuid"`
+	ProfileUUID   string          `db:"profile_uuid"`
+	Amount        decimal.Decimal `db:"amount"`
+	Network       string          `db:"network"`
+	Status        string          `db:"status"`
+	TransactionID *string         `db:"transaction_id"`
+	IsClosed      bool            `db:"is_closed"`
 
 	CreatedAt time.Time `db:"created_at"`
 	UpdatedAt time.Time `db:"updated_at"`
@@ -33,14 +34,15 @@ func NewTopUpRepository(db *sql.DB) interfaces.TopUpRepository {
 	}
 }
 
-func (r *TopUpRepository) Create(topUp entity.TopUp) error {
+func (r TopUpRepository) Create(topUp entity.TopUp) error {
 	_, err := r.db.Exec(
-		"INSERT INTO "+r.table+" (uuid, profile_uuid, amount, network, status, is_closed, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
+		"INSERT INTO "+r.table+" (uuid, profile_uuid, amount, network, status, transaction_id, is_closed, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
 		topUp.UUID.String(),
 		topUp.Customer.String(),
 		topUp.Amount,
 		topUp.Network,
 		topUp.Status,
+		topUp.TransactionID,
 		topUp.IsClosed,
 		topUp.CreatedAt,
 		topUp.UpdatedAt,
@@ -49,7 +51,7 @@ func (r *TopUpRepository) Create(topUp entity.TopUp) error {
 	return err
 }
 
-func (r *TopUpRepository) GetByUUID(uuid valueobject.UUID) (*entity.TopUp, error) {
+func (r TopUpRepository) GetByUUID(uuid valueobject.UUID) (*entity.TopUp, error) {
 	var topUp sqlTopUp
 
 	row := r.db.QueryRow("SELECT * FROM top_up WHERE uuid = $1", uuid.String())
@@ -59,6 +61,7 @@ func (r *TopUpRepository) GetByUUID(uuid valueobject.UUID) (*entity.TopUp, error
 		&topUp.Amount,
 		&topUp.Network,
 		&topUp.Status,
+		&topUp.TransactionID,
 		&topUp.IsClosed,
 		&topUp.CreatedAt,
 		&topUp.UpdatedAt,
@@ -71,7 +74,7 @@ func (r *TopUpRepository) GetByUUID(uuid valueobject.UUID) (*entity.TopUp, error
 	return toDomainTopUp(topUp)
 }
 
-func (r *TopUpRepository) SetStatus(uuid valueobject.UUID, status entity.TopUpStatus) error {
+func (r TopUpRepository) SetStatus(uuid valueobject.UUID, status entity.TopUpStatus) error {
 	_, err := r.db.Exec(
 		"UPDATE "+r.table+" SET status = $1, updated_at = $2 WHERE uuid = $3",
 		status,
@@ -80,6 +83,41 @@ func (r *TopUpRepository) SetStatus(uuid valueobject.UUID, status entity.TopUpSt
 	)
 
 	return err
+}
+
+func (r TopUpRepository) AddTransactionID(uuid valueobject.UUID, transactionID string) error {
+	_, err := r.db.Exec(
+		"UPDATE "+r.table+" SET transaction_id = $1, updated_at = $2 WHERE uuid = $3",
+		transactionID,
+		time.Now(),
+		uuid.String(),
+	)
+
+	return err
+}
+
+func (r TopUpRepository) GetCustomerCurrentTopUp(profileUUID valueobject.UUID) (*entity.TopUp, error) {
+	var topUp sqlTopUp
+
+	row := r.db.QueryRow("SELECT * FROM top_up WHERE uuid = $1 and is_closed = false", profileUUID.String())
+
+	err := row.Scan(
+		&topUp.UUID,
+		&topUp.ProfileUUID,
+		&topUp.Amount,
+		&topUp.Network,
+		&topUp.Status,
+		&topUp.TransactionID,
+		&topUp.IsClosed,
+		&topUp.CreatedAt,
+		&topUp.UpdatedAt,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return toDomainTopUp(topUp)
 }
 
 func toDomainTopUp(t sqlTopUp) (*entity.TopUp, error) {
@@ -94,12 +132,14 @@ func toDomainTopUp(t sqlTopUp) (*entity.TopUp, error) {
 	}
 
 	return &entity.TopUp{
-		UUID:      accountUUID,
-		Customer:  profileUUID,
-		Amount:    t.Amount,
-		Status:    entity.TopUpStatus(t.Status),
-		IsClosed:  t.IsClosed,
-		CreatedAt: t.CreatedAt,
-		UpdatedAt: t.UpdatedAt,
+		UUID:          accountUUID,
+		Customer:      profileUUID,
+		Amount:        t.Amount,
+		Status:        entity.TopUpStatus(t.Status),
+		Network:       t.Network,
+		TransactionID: t.TransactionID,
+		IsClosed:      t.IsClosed,
+		CreatedAt:     t.CreatedAt,
+		UpdatedAt:     t.UpdatedAt,
 	}, nil
 }

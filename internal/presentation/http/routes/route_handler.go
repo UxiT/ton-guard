@@ -17,6 +17,7 @@ import (
 // валидируется и прокидывается в функцию + настройка логгера тоже на этом уровне
 type publicAPIFunc func(w http.ResponseWriter, r any) error
 type protectedAPIFunc func(w http.ResponseWriter, r any, profile valueobject.UUID) error
+type privateAPIFunc func(w http.ResponseWriter, r any) error
 
 func HandlePublic(l *zerolog.Logger, h publicAPIFunc, req common.Request) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -29,7 +30,7 @@ func HandlePublic(l *zerolog.Logger, h publicAPIFunc, req common.Request) http.H
 			return
 		}
 
-		if err := h(w, targetRequest); err != nil {
+		if err = h(w, targetRequest); err != nil {
 			e := common.JSONErrorResponse(w, err)
 
 			if e != nil {
@@ -66,6 +67,29 @@ func HandleProtected(l *zerolog.Logger, h protectedAPIFunc, req common.Request) 
 		}
 
 		if err = h(w, targetRequest, profileUUID); err != nil {
+			e := common.JSONErrorResponse(w, err)
+
+			if e != nil {
+				http.Error(w, "internal server error", http.StatusInternalServerError)
+			}
+
+			l.Error().Err(err).Msg("http error")
+		}
+	}
+}
+
+func HandlePrivate(l *zerolog.Logger, h privateAPIFunc, req common.Request) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		*l = l.With().Str("method", r.Method).Str("url", r.URL.String()).Logger()
+		targetRequest, err := decodeRequest(r, req, l)
+
+		if err != nil {
+			http.Error(w, "invalid request body", http.StatusUnprocessableEntity)
+
+			return
+		}
+
+		if err = h(w, targetRequest); err != nil {
 			e := common.JSONErrorResponse(w, err)
 
 			if e != nil {
