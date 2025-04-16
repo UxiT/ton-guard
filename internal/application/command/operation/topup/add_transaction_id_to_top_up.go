@@ -2,6 +2,7 @@ package topup
 
 import (
 	"context"
+	"decard/internal/domain/entity"
 	"decard/internal/domain/interfaces"
 	"decard/internal/domain/valueobject"
 	"fmt"
@@ -54,7 +55,7 @@ func (h AddTransactionToTopUpCommandHandler) Handle(ctx context.Context, cmd Add
 		return AddTransactionToTopUpResponse{}, fmt.Errorf("customer has no access")
 	}
 
-	err = h.topUpRepository.SetStatus(topUpUUID)
+	err = h.topUpRepository.SetStatus(topUpUUID, entity.Validating)
 
 	return AddTransactionToTopUpResponse{}, nil
 }

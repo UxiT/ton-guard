@@ -75,7 +75,7 @@ func (h FinancialOperationHandler) AddTransactionID(w http.ResponseWriter, r any
 
 	response, err := h.addTransactionToTopUpHandler.Handle(context.Background(), topup.AddTransactionToTopUpCommand{
 		TopUpUUID:     req.TopUp,
-		Customer:      profile,
+		Profile:       profile,
 		TransactionID: req.TransactionID,
 	})
 
